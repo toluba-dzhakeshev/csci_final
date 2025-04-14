@@ -1,0 +1,41 @@
+#python files
+__pycache__/
+*.py[cod]
+*$py.class
+
+#ignore env
+csci_final/
+
+#virtual env
+env/
+venv/
+ENV/
+
+#files
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+#logs
+*.log
+
+#IDE files
+.vscode/
+.idea/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+chromedriver

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Movie Recommendation Web App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    header {
+      background-color: #333;
+      color: #fff;
+      padding: 1em;
+      text-align: center;
+    }
+    nav {
+      background-color: #444;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      padding: 0.5em;
+    }
+    nav a {
+      color: #fff;
+      text-decoration: none;
+    }
+    main {
+      padding: 20px;
+      min-height: 80vh;
+    }
+    .search-container {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .search-container input[type="text"] {
+      width: 300px;
+      padding: 8px;
+      border: 1px solid #ccc;
+    }
+    .search-container button {
+      padding: 8px 12px;
+      margin-left: 5px;
+    }
+    .movie-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    .movie-card {
+      background-color: #fff;
+      border: 1px solid #ddd;
+      padding: 10px;
+      box-shadow: 1px 1px 4px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .movie-card img {
+      width: 100%;
+      height: auto;
+    }
+    .movie-card h3 {
+      margin: 10px 0 5px;
+    }
+    .movie-card p {
+      margin: 5px 0;
+    }
+    footer {
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      padding: 1em;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Movie Recommendation Web App</h1>
+  </header>
+  
+  <nav>
+    <a href="#">Home</a>
+    <a href="#">Top Movies</a>
+    <a href="#">Scrape Movies</a>
+    <a href="#">About</a>
+  </nav>
+  
+  <main>
+    <div class="search-container">
+      <input type="text" placeholder="Search for movies..." id="searchInput">
+      <button onclick="searchMovies()">Search</button>
+    </div>
+    
+    <div class="movie-grid" id="movieGrid">
+      <div class="movie-card">
+        <img src="https://via.placeholder.com/200x300?text=Movie+Poster" alt="Movie Poster">
+        <h3>Movie Title 1</h3>
+        <p>Year: 2025</p>
+        <p>Director: John Doe</p>
+      </div>
+      <div class="movie-card">
+        <img src="https://via.placeholder.com/200x300?text=Movie+Poster" alt="Movie Poster">
+        <h3>Movie Title 2</h3>
+        <p>Year: 2020</p>
+        <p>Director: Jane Smith</p>
+      </div>
+    </div>
+    
+    <div style="text-align: center; margin-top: 20px;">
+      <button onclick="scrapeMovies()">Scrape Movies</button>
+    </div>
+  </main>
+  
+  <footer>
+    <p>&copy; 2025 Movie Recommendation Web App</p>
+  </footer>
+  
+  <script>
+    function searchMovies() {
+      const searchValue = document.getElementById("searchInput").value;
+      alert("Search functionality coming soon! You searched for: " + searchValue);
+    }
+    
+    function scrapeMovies() {
+      alert("Scrape Movies functionality coming soon!");
+    }
+  </script>
+</body>
+</html>
