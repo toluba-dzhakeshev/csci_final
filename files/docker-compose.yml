@@ -1,0 +1,12 @@
+services:
+  db:
+    image: postgres:14
+    restart: always
+    environment:
+      POSTGRES_USER:  tolubai
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB:     movies_db
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"

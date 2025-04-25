@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<form action="{{ url_for('recommend') }}" method="post" class="space-y-4">
+  <div>
+    <label class="block">Description:</label>
+    <input type="text" name="description" required
+           class="w-full p-2 border rounded" placeholder="e.g. fast-paced sci-fi adventure">
+  </div>
+  <div class="grid grid-cols-3 gap-4">
+    <div>
+      <label>Genre</label>
+      <select name="genre" class="w-full p-2 border rounded">
+        <option value="">Any</option>
+        {% for g in genres %}
+          <option value="{{ g }}">{{ g }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label>Year</label>
+      <select name="year" class="w-full p-2 border rounded">
+        <option value="">Any</option>
+        {% for y in years %}
+          <option value="{{ y }}">{{ y }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label>Min Rating</label>
+      <select name="rating" class="w-full p-2 border rounded">
+        <option value="">Any</option>
+        {% for r in ratings %}
+          <option value="{{ r }}">{{ r }}+</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  <button type="submit"
+          class="bg-blue-600 text-white px-4 py-2 rounded">
+    Get Recommendations
+  </button>
+</form>
+{% endblock %}

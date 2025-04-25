@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-xl font-semibold mb-2">Recommendations</h2>
+<p class="mb-4 text-gray-700">
+  You asked for “{{ description }}” 
+  {% if filters.genre %}in {{ filters.genre }}{% endif %}
+  {% if filters.year %} from {{ filters.year }}{% endif %}
+  {% if filters.rating %} rated at least {{ filters.rating }}{% endif %}.
+</p>
+
+<ul class="space-y-4">
+  {% for m in movies %}
+  <li class="p-4 bg-white rounded shadow">
+    <h3 class="font-bold">{{ m.title }}</h3>
+    {% if m.avg_rating %}<p>Rating: {{ m.avg_rating }}</p>{% endif %}
+    {% if m.poster_url %}
+      <img src="{{ m.poster_url }}" class="h-32 mt-2">
+    {% endif %}
+  </li>
+  {% else %}
+  <li>No matches found.</li>
+  {% endfor %}
+</ul>
+
+<p class="mt-6">
+  <a href="{{ url_for('index') }}" class="text-blue-600">Try again</a>
+</p>
+{% endblock %}
