@@ -38,4 +38,10 @@ var/
 .DS_Store
 Thumbs.db
 
+# Node.js dependencies
+node_modules/
+
+# Postgres data directory
+pg_data/
+
 chromedriver
