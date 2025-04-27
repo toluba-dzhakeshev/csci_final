@@ -1,28 +1,87 @@
-{% extends "base.html" %}
+{% extends 'layout.html' %}
+
 {% block content %}
-<h2 class="text-xl font-semibold mb-2">Recommendations</h2>
-<p class="mb-4 text-gray-700">
-  You asked for “{{ description }}” 
-  {% if filters.genre %}in {{ filters.genre }}{% endif %}
-  {% if filters.year %} from {{ filters.year }}{% endif %}
-  {% if filters.rating %} rated at least {{ filters.rating }}{% endif %}.
-</p>
+  <h1 class="text-2xl font-bold mb-6">Your Recommendations</h1>
 
-<ul class="space-y-4">
-  {% for m in movies %}
-  <li class="p-4 bg-white rounded shadow">
-    <h3 class="font-bold">{{ m.title }}</h3>
-    {% if m.avg_rating %}<p>Rating: {{ m.avg_rating }}</p>{% endif %}
-    {% if m.poster_url %}
-      <img src="{{ m.poster_url }}" class="h-32 mt-2">
-    {% endif %}
-  </li>
-  {% else %}
-  <li>No matches found.</li>
-  {% endfor %}
-</ul>
+  <div id="rec-container" class="flex flex-col space-y-6">
+    {% for sim, movie in recommendations %}
+      <div class="flex bg-gray-100 dark:bg-gray-800 rounded shadow overflow-hidden">
+        <!-- Poster -->
+        <img src="{{ movie.poster_url }}"
+             alt="{{ movie.title }} poster"
+             class="w-1/3 object-cover">
 
-<p class="mt-6">
-  <a href="{{ url_for('index') }}" class="text-blue-600">Try again</a>
-</p>
+        <!-- Details -->
+        <div class="p-6 flex-1 flex flex-col justify-between">
+          <div>
+            <div class="flex items-baseline justify-between mb-2">
+              <h2 class="text-xl font-semibold">{{ movie.title }}</h2>
+              <div class="text-sm text-gray-600 dark:text-gray-400 space-x-4">
+                <span>Similarity: {{ '%.2f'|format(sim) }}</span>
+                <span>Rating: {{ '%.1f'|format(movie.avg_rating) }}</span>
+              </div>
+            </div>
+
+            <p class="mb-4">{{ movie.description }}</p>
+
+            <!-- Model‐rating form -->
+            <form action="{{ url_for('main.rate_model') }}"
+                  method="post"
+                  class="model-rating-form mb-4 text-sm">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="movie_id" value="{{ movie.movie_id }}">
+
+              <div class="font-medium mb-1">Rate performance of recommendation</div>
+              <div class="star-rating">
+                {% for i in range(10, 0, -1) %}
+                  <input type="radio"
+                         id="star-{{ movie.movie_id }}-{{ i }}"
+                         name="model_rating"
+                         value="{{ i }}">
+                  <label for="star-{{ movie.movie_id }}-{{ i }}"></label>
+                {% endfor %}
+              </div>
+            </form>
+
+            <button type="button"
+                    class="text-blue-500 hover:underline mb-4"
+                    onclick="toggleDetails('det-{{ movie.movie_id }}', this)">
+              More Info
+            </button>
+            <div id="det-{{ movie.movie_id }}"
+                 class="hidden text-sm space-y-1 text-gray-700 dark:text-gray-300 mb-4">
+              <p><strong>Year:</strong> {{ movie.year.year_value }}</p>
+              <p><strong>Genre:</strong> {{ movie.genres|map(attribute='genre_name')|join(', ') }}</p>
+              <p><strong>Studios:</strong> {{ movie.studios|map(attribute='studio_name')|join(', ') }}</p>
+              <p><strong>Director:</strong> {{ movie.director.director_name }}</p>
+              <p><strong>Producers:</strong> {{ movie.producers|map(attribute='producer_name')|join(', ') }}</p>
+              <p><strong>Cast:</strong> {{ movie.cast_members|map(attribute='cast_name')|join(', ') }}</p>
+              <p><strong>Duration:</strong> {{ movie.duration }} min</p>
+              <a href="{{ movie.page_url }}" target="_blank" class="text-blue-500 hover:underline">
+                View on site
+              </a>
+            </div>
+          </div>
+
+          <button type="button"
+                  class="text-red-500 hover:underline"
+                  data-mid="{{ movie.movie_id }}"
+                  data-faved="{% if movie in current_user.favorites %}1{% else %}0{% endif %}"
+                  onclick="toggleFavorite(this)">
+            {% if movie in current_user.favorites %}Remove Favorite{% else %}Add Favorite{% endif %}
+          </button>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  {% if has_more %}
+    <div class="text-center mt-6">
+      <button id="load-more"
+              class="bg-blue-600 text-white px-4 py-2 rounded"
+              data-offset="{{ next_offset }}">
+        More
+      </button>
+    </div>
+  {% endif %}
 {% endblock %}

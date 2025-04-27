@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" class="{{ 'dark' if request.cookies.get('theme')=='dark' else '' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up - MovieRecApp</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+  <div class="min-h-screen flex items-center justify-center">
+    <form action="{{ url_for('auth.signup') }}" method="post" class="bg-gray-100 dark:bg-gray-800 p-8 rounded shadow-md w-full max-w-md">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <h2 class="text-2xl font-bold mb-6 text-center">Create Account</h2>
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="mb-4 text-red-500">
+            {% for msg in messages %}{{ msg }}{% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      <label class="block mb-2">Email</label>
+      <input type="email" name="email" required class="w-full mb-4 px-3 py-2 border rounded">
+      <label class="block mb-2">Password</label>
+      <input type="password" name="password" required class="w-full mb-6 px-3 py-2 border rounded">
+      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded">Sign Up</button>
+      <p class="mt-4 text-center">Already have an account? <a href="{{ url_for('auth.login') }}" class="text-blue-500 hover:underline">Log in</a></p>
+    </form>
+  </div>
+</body>
+</html>

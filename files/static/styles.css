@@ -1,0 +1,127 @@
+.star-rating {
+    display: inline-flex;
+    flex-direction: row-reverse;
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+  .star-rating input { display: none; }
+  .star-rating label { 
+    cursor: pointer; padding: 0 .1rem; color: #ddd; 
+  }
+  .star-rating label::before { content: '☆'; }
+  .star-rating input:checked ~ label::before,
+  .star-rating label:hover::before,
+  .star-rating label:hover ~ label::before {
+    content: '★'; color: gold;
+  }
+
+/* ─── 0) Vertical spacing & positioning ───────────────────────────────── */
+.noUi-target.noUi-horizontal {
+  margin: 2rem 0 !important;  /* space between sliders */
+  position: relative;         /* needed for tooltip positioning */
+}
+
+/* ─── 1) Slider Rail & Base ───────────────────────────────────────────── */
+.noUi-target.noUi-horizontal,
+.noUi-target.noUi-horizontal .noUi-base {
+  height: 4px !important;                       /* thin rail */
+  border-radius: 2px !important;                /* rounded ends */
+  background: var(--tw-bg-gray-600) !important; /* rail color */
+  overflow: visible !important;                 /* let handles overflow */
+}
+
+/* ─── 2) Filled Portion ───────────────────────────────────────────────── */
+.noUi-target.noUi-horizontal .noUi-connect {
+  background: var(--tw-bg-blue-500) !important; /* accent color */
+}
+
+/* ─── 3) Hide Default Pips/Tick-Marks ─────────────────────────────────── */
+.noUi-target.noUi-horizontal .noUi-pips {
+  display: none !important;
+}
+
+/* ─── 4) Handles: Size, Shape, Shadow ────────────────────────────────── */
+.noUi-target.noUi-horizontal .noUi-handle {
+  width: 16px !important;
+  height: 16px !important;
+  top: -6px !important;                         /* vertically center */
+  border-radius: 50% !important;                /* perfect circle */
+  background: #000 !important;                  /* light-mode fill */
+  border: 2px solid #000 !important;            /* light-mode border */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+  cursor: grab !important;
+  transition: transform .2s !important;
+}
+
+/* ─── 5) Handle Hover & Active States ───────────────────────────────── */
+.noUi-target.noUi-horizontal .noUi-handle:hover {
+  transform: scale(1.2) !important;
+}
+.noUi-target.noUi-horizontal .noUi-handle:active {
+  background: var(--tw-bg-gray-200) !important;
+}
+
+/* ─── 6) Dark Mode Override: White Knobs ────────────────────────────── */
+html.dark .noUi-target.noUi-horizontal .noUi-handle {
+  background: #fff !important;
+  border-color: #fff !important;
+}
+
+/* ─── 7) Remove the tiny grip-bars inside each handle ───────────────── */
+.noUi-target.noUi-horizontal .noUi-handle::before,
+.noUi-target.noUi-horizontal .noUi-handle::after {
+  display: none !important;
+}
+
+/* ─── 8) Tooltip: only the number, positioned under each handle ──────── */
+.noUi-tooltip {
+  position: absolute !important;
+  top: 0 !important;                              /* anchor at handle */
+  left: 50% !important;
+  transform: translate(-50%, 28px) !important;     /* 28px down */
+
+  font-size: 0.75rem !important;                   /* small text */
+  color: var(--tw-text-gray-800) !important;       /* light-mode text */
+
+  background: transparent !important;              /* no box */
+  border: none !important;                         /* no outline */
+  box-shadow: none !important;
+  padding: 0 !important;
+  white-space: nowrap !important;
+
+  pointer-events: none !important;                 /* click-through */
+  z-index: 9 !important;                           /* above rail */
+}
+
+/* ─── 9) Dark Mode Tooltip Text ─────────────────────────────────────── */
+html.dark .noUi-tooltip {
+  color: var(--tw-text-gray-200) !important;       /* light text in dark mode */
+}
+
+/* ─── 10) Remove any leftover arrow/connector ────────────────────────── */
+.noUi-tooltip::before,
+.noUi-tooltip::after {
+  display: none !important;
+}
+
+/* ────────────────────────── */
+
+/* 1) Pull the title/label closer to its slider */
+h2.slider‐title,
+h3.slider‐title,
+label.slider‐title {
+  display: block;
+  margin-bottom: 0.25rem !important;  /* shrink the gap under the title */
+}
+
+/* 2) Give each slider plenty of breathing room below */
+.noUi-target.noUi-horizontal {
+  margin: 0.5rem 0 3rem !important;    /* top 0.5rem, bottom 3rem */
+}
+
+/* 3) Push your Search button down so it can’t collide */
+button[type="submit"],
+input[type="submit"] {
+  display: block;
+  margin-top: 2rem !important;         /* or whatever works in your layout */
+}

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  {% include '../index.html' %}
+<body>
+  <main class="container mx-auto p-6">
+    <h2 class="text-2xl font-semibold mb-4">User Management</h2>
+    <table class="min-w-full bg-white dark:bg-gray-800">
+      <thead><tr><th>ID</th><th>Email</th><th>Admin</th><th>Actions</th></tr></thead>
+      <tbody>
+      {% for u in users %}
+      <tr>
+        <td>{{ u.user_id }}</td>
+        <td>{{ u.email }}</td>
+        <td>{{ u.is_admin }}</td>
+        <td>
+          <form action="{{ url_for('admin.toggle_admin', uid=u.user_id) }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </main>
+</body>
+</html>

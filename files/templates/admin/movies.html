@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  {% include '../index.html' %}
+<body>
+  <main class="container mx-auto p-6">
+    <h2 class="text-2xl font-semibold mb-4">Movie Catalog</h2>
+    <a href="{{ url_for('admin.add_movie') }}" class="bg-blue-600 text-white px-4 py-2 rounded mb-4 inline-block">Add Movie</a>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for m in movies %}
+      <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded shadow">
+        <h3>{{ m.title }}</h3>
+        <form action="{{ url_for('admin.delete_movie', mid=m.movie_id) }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="text-red-500">Delete</button>
+        </form>
+        <a href="{{ url_for('admin.edit_movie', mid=m.movie_id) }}" class="text-blue-500">Edit</a>
+      </div>
+      {% endfor %}
+    </div>
+  </main>
+</body>
+</html>

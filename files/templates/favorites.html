@@ -1,0 +1,83 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+  <h1 class="text-2xl font-bold mb-6">Your Favorites</h1>
+
+  {% if movies %}
+    <div class="flex flex-col space-y-6">
+      {% for movie in movies %}
+        <div class="flex bg-gray-100 dark:bg-gray-800 rounded shadow overflow-hidden">
+          <!-- Poster -->
+          <img
+            src="{{ movie.poster_url }}"
+            alt="{{ movie.title }} poster"
+            class="w-1/4 object-cover"
+          >
+
+          <!-- Details -->
+          <div class="p-4 flex-1 flex flex-col justify-between">
+            <div>
+              <h2 class="text-xl font-semibold mb-2">{{ movie.title }}</h2>
+
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                <strong>Movie Rating:</strong> {{ movie.avg_rating|round(1) }}
+              </p>
+
+              <p class="mb-4">{{ movie.description }}</p>
+
+              <button
+                type="button"
+                class="text-blue-500 hover:underline mb-4"
+                onclick="toggleDetails('details-{{ movie.movie_id }}', this)"
+              >
+                More Info
+              </button>
+
+              <div id="details-{{ movie.movie_id }}"
+                   class="hidden text-sm space-y-1 text-gray-700 dark:text-gray-300 mb-4">
+                <p><strong>Year:</strong> {{ movie.year.year_value }}</p>
+                <p><strong>Genre:</strong>
+                  {{ movie.genres|map(attribute='genre_name')|join(', ') }}
+                </p>
+                <p><strong>Studios:</strong>
+                  {{ movie.studios|map(attribute='studio_name')|join(', ') }}
+                </p>
+                <p><strong>Director:</strong>
+                  {{ movie.director.director_name }}
+                </p>
+                <p><strong>Producers:</strong>
+                  {{ movie.producers|map(attribute='producer_name')|join(', ') }}
+                </p>
+                <p><strong>Cast:</strong>
+                  {{ movie.cast_members|map(attribute='cast_name')|join(', ') }}
+                </p>
+                <p><strong>Duration:</strong> {{ movie.duration }} min</p>
+                <a href="{{ movie.page_url }}"
+                   target="_blank"
+                   class="text-blue-500 hover:underline">
+                  View on site
+                </a>
+              </div>
+            </div>
+
+            <!-- Remove Favorite button -->
+            <form action="{{ url_for('main.toggle_fav', mid=movie.movie_id) }}"
+                  method="post"
+                  class="mt-4">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="next" value="{{ request.url }}">
+              <button type="submit" class="text-red-500 hover:underline">
+                Remove Favorite
+              </button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>You haven’t added any favorites yet. 
+      <a href="{{ url_for('main.index') }}"
+         class="text-blue-500 hover:underline">Find some movies!</a>
+    </p>
+  {% endif %}
+{% endblock %}
