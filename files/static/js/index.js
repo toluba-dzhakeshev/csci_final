@@ -39,12 +39,33 @@ function toggleDetails(detailsId, btn) {
 }
 
 //
-// 4) Auto-submit your 10-star model-rating widget
+// 4) AJAX-submit your 10-star model-rating widget (no page reload)
 //
-document.querySelectorAll('.star-rating input').forEach(input => {
-  input.addEventListener('change', e => {
-    e.target.closest('form').submit();
+document.body.addEventListener('change', async e => {
+  const input = e.target;
+  // only care about our model_rating radios
+  if (input.name !== 'model_rating') return;
+  
+  const form = input.closest('.model-rating-form');
+  const url  = form.action;                // should be "/rate_model"
+  const data = new URLSearchParams(new FormData(form));
+  
+  const resp = await fetch(url, {
+    method:      'POST',
+    body:        data,
+    headers: {
+      'X-CSRFToken':      csrfToken,
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    credentials: 'same-origin'
   });
+
+  if (resp.status === 204) {
+    // success! you could flash a toast or highlight the star here
+    console.log(`Rated movie ${data.get('movie_id')} → ${data.get('model_rating')}`);
+  } else {
+    console.error('Model-rating failed', resp);
+  }
 });
 
 //
@@ -213,5 +234,19 @@ document.body.addEventListener('click', async e => {
     } else {
       btn.remove();
     }
+});
+
+//##################################################################
+$('#genres, #studios, #producers, #cast_members').select2({
+  tags: true,
+  tokenSeparators: [','],
+  placeholder: 'Start typing to add or select…'
+});
+
+// single‐value tagging for director
+$('#director').select2({
+  tags: true,
+  placeholder: 'Pick or create a director…',
+  allowClear: true
 });
   

@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_login import login_required, current_user
-from models import db, Movie, Favorite, Rating, Genre, Year, Studio, Director, Producer, CastMember
+from models import db, Movie, Favorite, Rating, Genre, Year, Studio, Director, Producer, CastMember, ActivityLog
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from sqlalchemy import func
@@ -72,7 +72,15 @@ def toggle_fav(mid):
         db.session.add(Favorite(user_id=current_user.user_id, movie_id=mid))
         flash('Added to favorites')
         now_fav = True
+
     db.session.commit()
+    ###################################################
+    log_activity(
+        current_user.user_id,
+        'toggle_fav',
+        detail={'movie_id': mid, 'faved': now_fav}
+    )
+    ###################################################
 
     # If this was called via fetch()/AJAX, send 204
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -85,6 +93,7 @@ def toggle_fav(mid):
 @main_bp.route('/recommend', methods=['GET','POST'])
 @login_required
 def recommend():
+    
     # 1) Handle the form submit
     if request.method == 'POST':
         params = {
@@ -167,6 +176,27 @@ def recommend():
             'next_offset': offset + limit,
             'has_more':    has_more
         })
+        
+    ###################################################
+    if request.method == 'GET':
+    # … gather desc, genre, studio, etc. …
+        log_activity(
+        current_user.user_id,
+        'search',
+        detail={
+            'description': desc,
+            'genre': genre,
+            'studio': studio,
+            'director': director,
+            'producer': producer,
+            'cast_member': cast,
+            'year_from': yf,
+            'year_to': yt,
+            'rating_from': rf,
+            'rating_to': rt
+        }
+        )
+    ###################################################
 
     # 6) Otherwise (initial page load), render the HTML template
     return render_template('results.html',
@@ -224,6 +254,24 @@ def rate_model():
         db.session.add(rec)
 
     db.session.commit()
+    ###############################################
+    log_activity(
+    current_user.user_id,
+        'rate_model',
+        detail={'movie_id': movie_id, 'score': score}
+    )
+    ###############################################
+    
+    # If it was an AJAX call, just return 204 No Content
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return ('', 204)
+    
     flash(f'You rated the model {score}/10 on "{Movie.query.get(movie_id).title}"')
     return redirect(request.referrer or url_for('main.recommend'))
 
+###############################################
+def log_activity(user_id, action, detail=None):
+    entry = ActivityLog(user_id=user_id, action=action, detail=detail)
+    db.session.add(entry)
+    # you can commit immediately or let the enclosing handler commit later
+    db.session.commit()

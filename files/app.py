@@ -6,6 +6,7 @@ from flask_login import LoginManager
 from flask_wtf import CSRFProtect
 from sentence_transformers import SentenceTransformer
 from flask_caching import Cache
+from admin import admin_bp
 
 csrf = CSRFProtect()
 

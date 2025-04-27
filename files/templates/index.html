@@ -14,33 +14,77 @@
         id="query"
         name="description"
         required
-        class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="
+          w-full px-4 py-2
+          bg-white dark:bg-gray-700
+          text-gray-900 dark:text-gray-100
+          border border-gray-300 dark:border-gray-600
+          rounded
+          focus:outline-none
+          focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400
+          focus:border-blue-500 dark:focus:border-blue-400
+        "
       >
     </div>
 
     <!-- Basic Filters -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+      <!-- Genre -->
       <div>
         <label class="block mb-1">Genre</label>
-        <select name="genre" class="w-full border rounded px-2 py-1">
+        <select name="genre"
+                class="
+                  w-full px-2 py-1
+                  bg-white dark:bg-gray-700
+                  text-gray-900 dark:text-gray-100
+                  border border-gray-300 dark:border-gray-600
+                  rounded
+                  focus:outline-none
+                  focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400
+                  focus:border-blue-500 dark:focus:border-blue-400
+                ">
           <option value="">All</option>
           {% for g in genres %}
             <option value="{{ g.genre_id }}">{{ g.genre_name }}</option>
           {% endfor %}
         </select>
       </div>
+
+      <!-- Studio -->
       <div>
         <label class="block mb-1">Studio</label>
-        <select name="studio" class="w-full border rounded px-2 py-1">
+        <select name="studio"
+                class="
+                  w-full px-2 py-1
+                  bg-white dark:bg-gray-700
+                  text-gray-900 dark:text-gray-100
+                  border border-gray-300 dark:border-gray-600
+                  rounded
+                  focus:outline-none
+                  focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400
+                  focus:border-blue-500 dark:focus:border-blue-400
+                ">
           <option value="">All</option>
           {% for s in studios %}
             <option value="{{ s.studio_id }}">{{ s.studio_name }}</option>
           {% endfor %}
         </select>
       </div>
+
+      <!-- Director -->
       <div>
         <label class="block mb-1">Director</label>
-        <select name="director" class="w-full border rounded px-2 py-1">
+        <select name="director"
+                class="
+                  w-full px-2 py-1
+                  bg-white dark:bg-gray-700
+                  text-gray-900 dark:text-gray-100
+                  border border-gray-300 dark:border-gray-600
+                  rounded
+                  focus:outline-none
+                  focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400
+                  focus:border-blue-500 dark:focus:border-blue-400
+                ">
           <option value="">All</option>
           {% for d in directors %}
             <option value="{{ d.director_id }}">{{ d.director_name }}</option>
@@ -51,6 +95,7 @@
 
     <!-- AJAX-powered Autocomplete Filters -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+      <!-- Producer -->
       <div>
         <label class="block mb-1">Producer</label>
         <select
@@ -58,10 +103,18 @@
           name="producer"
           data-ajax-url="{{ url_for('main.producer_search') }}"
           style="width:100%"
+          class="
+            bg-white dark:bg-gray-700
+            text-gray-900 dark:text-gray-100
+            border border-gray-300 dark:border-gray-600
+            rounded
+          "
         >
           <option value="">Any Producer</option>
         </select>
       </div>
+
+      <!-- Cast Member -->
       <div>
         <label class="block mb-1">Cast Member</label>
         <select
@@ -69,19 +122,26 @@
           name="cast_member"
           data-ajax-url="{{ url_for('main.cast_search') }}"
           style="width:100%"
+          class="
+            bg-white dark:bg-gray-700
+            text-gray-900 dark:text-gray-100
+            border border-gray-300 dark:border-gray-600
+            rounded
+          "
         >
           <option value="">Any Cast Member</option>
         </select>
       </div>
     </div>
 
+    <!-- Sliders -->
     <div class="slider-wrapper my-6">
       <label class="block font-medium">Movie Year</label>
       <div id="year-slider" class="w-full"></div>
       <input type="hidden" name="year_from" id="year_from" value="{{ min_year }}">
       <input type="hidden" name="year_to"   id="year_to"   value="{{ max_year }}">
     </div>
-    
+
     <div class="slider-wrapper my-6">
       <label class="block font-medium">Movie Rating</label>
       <div id="rating-slider" class="w-full"></div>
@@ -93,7 +153,14 @@
     <div>
       <button
         type="submit"
-        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold"
+        class="
+          w-full
+          bg-blue-600 hover:bg-blue-700
+          text-white dark:text-gray-100
+          py-3
+          rounded-lg
+          font-semibold
+        "
       >
         Search
       </button>

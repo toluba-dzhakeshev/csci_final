@@ -1,20 +1,162 @@
-<!DOCTYPE html>
-<html lang="en">
-  {% include '../index.html' %}
-<body>
-  <main class="container mx-auto p-6">
-    <h2 class="text-2xl font-semibold mb-4">{{ 'Edit' if movie else 'Add' }} Movie</h2>
-    <form action="" method="post" class="space-y-4">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <input name="movie_id" type="hidden" value="{{ movie.movie_id if movie }}">
-      {% for field in ['Title','Description','AvgRating','Duration','Poster','PageURL'] %}
-      <div>
-        <label class="block mb-1">{{ field }}</label>
-        <input name="{{ field }}" required value="{{ getattr(movie, field.lower(), '') }}" class="w-full px-3 py-2 border rounded">
-      </div>
-      {% endfor %}
-      <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Save</button>
-    </form>
-  </main>
-</body>
-</html>
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto p-6 bg-white dark:bg-gray-800 rounded shadow">
+  <h1 class="text-2xl font-bold mb-4">
+    {{ movie and 'Edit' or 'New' }} Movie
+  </h1>
+
+  <form action="" method="post" class="space-y-6">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <!-- TITLE -->
+    <div>
+      <label for="title" class="block font-medium">Title</label>
+      <input
+        id="title" name="title" type="text" required
+        class="w-full border rounded px-3 py-2 bg-gray-50 dark:bg-gray-700"
+        value="{{ movie and movie.title or '' }}"
+      >
+    </div>
+
+    <!-- DESCRIPTION -->
+    <div>
+      <label for="description" class="block font-medium">Description</label>
+      <textarea
+        id="description" name="description" rows="4"
+        class="w-full border rounded px-3 py-2 bg-gray-50 dark:bg-gray-700"
+      >{{ movie and movie.description or '' }}</textarea>
+    </div>
+
+    <!-- AVG RATING -->
+    <div>
+      <label for="avg_rating" class="block font-medium">Avg. Rating</label>
+      <input
+        id="avg_rating" name="avg_rating" type="number" step="0.1" min="0" max="10"
+        class="w-32 border rounded px-3 py-2 bg-gray-50 dark:bg-gray-700"
+        value="{{ movie and movie.avg_rating or '' }}"
+      >
+    </div>
+
+    <!-- DURATION -->
+    <div>
+      <label for="duration" class="block font-medium">Duration (min)</label>
+      <input
+        id="duration" name="duration" type="number" min="1"
+        class="w-32 border rounded px-3 py-2 bg-gray-50 dark:bg-gray-700"
+        value="{{ movie and movie.duration or '' }}"
+      >
+    </div>
+
+    <!-- POSTER & PAGE URLS -->
+    <div>
+      <label for="poster_url" class="block font-medium">Poster URL</label>
+      <input
+        id="poster_url" name="poster_url" type="url"
+        class="w-full border rounded px-3 py-2 bg-gray-50 dark:bg-gray-700"
+        value="{{ movie and movie.poster_url or '' }}"
+      >
+    </div>
+    <div>
+      <label for="page_url" class="block font-medium">Page URL</label>
+      <input
+        id="page_url" name="page_url" type="url"
+        class="w-full border rounded px-3 py-2 bg-gray-50 dark:bg-gray-700"
+        value="{{ movie and movie.page_url or '' }}"
+      >
+    </div>
+
+    <!-- YEAR -->
+    <div>
+      <label for="year_value" class="block font-medium">Year</label>
+      <input
+        id="year_value" name="year_value" type="number" min="1800" max="2100"
+        class="w-32 border rounded px-3 py-2 bg-gray-50 dark:bg-gray-700"
+        value="{{ movie and movie.year.year_value or '' }}"
+      >
+    </div>
+
+    <!-- DIRECTOR -->
+    <div>
+      <label for="director" class="block font-medium">Director</label>
+      <input
+        id="director" name="director" type="text" required
+        placeholder="Type director name"
+        class="w-full border rounded px-3 py-2 bg-gray-50 dark:bg-gray-700"
+        value="{{ movie and movie.director.director_name or '' }}"
+      >
+    </div>
+
+    <!-- GENRES -->
+    <div>
+      <label for="genres" class="block font-medium">Genres</label>
+      <input
+        id="genres" name="genres" type="text"
+        placeholder="Comedy, Drama, Action"
+        class="w-full border rounded px-3 py-2 bg-gray-50 dark:bg-gray-700"
+        value="{% if movie %}{{ movie.genres|map(attribute='genre_name')|join(', ') }}{% endif %}"
+      >
+    </div>
+
+    <!-- STUDIOS -->
+    <div>
+      <label for="studios" class="block font-medium">Studios</label>
+      <input
+        id="studios" name="studios" type="text"
+        placeholder="Studio A, Studio B"
+        class="w-full border rounded px-3 py-2 bg-gray-50 dark:bg-gray-700"
+        value="{% if movie %}{{ movie.studios|map(attribute='studio_name')|join(', ') }}{% endif %}"
+      >
+    </div>
+
+    <!-- PRODUCERS -->
+    <div>
+      <label for="producers" class="block font-medium">Producers</label>
+      <input
+        id="producers" name="producers" type="text"
+        placeholder="Producer 1, Producer 2"
+        class="w-full border rounded px-3 py-2 bg-gray-50 dark:bg-gray-700"
+        value="{% if movie %}{{ movie.producers|map(attribute='producer_name')|join(', ') }}{% endif %}"
+      >
+    </div>
+
+    <!-- CAST MEMBERS -->
+    <div>
+      <label for="cast_members" class="block font-medium">Cast Members</label>
+      <input
+        id="cast_members" name="cast_members" type="text"
+        placeholder="Actor A, Actor B"
+        class="w-full border rounded px-3 py-2 bg-gray-50 dark:bg-gray-700"
+        value="{% if movie %}{{ movie.cast_members|map(attribute='cast_name')|join(', ') }}{% endif %}"
+      >
+    </div>
+
+    <!-- EMBEDDINGS JSON -->
+    <div>
+      <label for="embeddings" class="block font-medium">Embeddings (JSON array)</label>
+      <textarea
+        id="embeddings" name="embeddings" rows="3"
+        class="w-full border rounded px-3 py-2 bg-gray-50 dark:bg-gray-700 font-mono text-sm"
+      >{{ movie and movie.embeddings or '' }}</textarea>
+    </div>
+
+    <!-- SUBMIT + CANCEL -->
+    <div class="flex items-center space-x-4">
+      <button
+        type="submit"
+        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+      >
+        {{ movie and 'Update' or 'Create' }}
+      </button>
+      <a
+        href="{{ url_for('admin.list_movies') }}"
+        class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded mt-8"
+      >
+        Cancel
+      </a>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+
+{% endblock %}

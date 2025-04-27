@@ -1,22 +1,75 @@
-<!DOCTYPE html>
-<html lang="en">
-  {% include '../index.html' %}
-<body>
-  <main class="container mx-auto p-6">
-    <h2 class="text-2xl font-semibold mb-4">Movie Catalog</h2>
-    <a href="{{ url_for('admin.add_movie') }}" class="bg-blue-600 text-white px-4 py-2 rounded mb-4 inline-block">Add Movie</a>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {% for m in movies %}
-      <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded shadow">
-        <h3>{{ m.title }}</h3>
-        <form action="{{ url_for('admin.delete_movie', mid=m.movie_id) }}" method="post">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button class="text-red-500">Delete</button>
-        </form>
-        <a href="{{ url_for('admin.edit_movie', mid=m.movie_id) }}" class="text-blue-500">Edit</a>
-      </div>
-      {% endfor %}
-    </div>
-  </main>
-</body>
-</html>
+{% extends 'layout.html' %}
+
+{% block content %}
+  <h1 class="text-2xl font-bold mb-4">All Movies</h1>
+  <a href="{{ url_for('admin.add_movie') }}"
+     class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded mb-4 inline-block">
+    + New Movie
+  </a>
+
+  <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow">
+    <table class="min-w-full table-fixed divide-y divide-gray-200 dark:divide-gray-700">
+      <thead class="bg-gray-50 dark:bg-gray-700">
+        <tr>
+          <th class="w-1/2 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+            Title
+          </th>
+          <th class="w-1/6 px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+            Year
+          </th>
+          <th class="w-1/6 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+            Director
+          </th>
+          <th class="w-1/6 px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+            Actions
+          </th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
+        {% for m in movies %}
+        <tr>
+          <td class="px-6 py-4 whitespace-nowrap">{{ m.title }}</td>
+          <td class="px-6 py-4 text-center whitespace-nowrap">{{ m.year.year_value }}</td>
+          <td class="px-6 py-4 whitespace-nowrap">{{ m.director.director_name }}</td>
+          <td class="px-6 py-4 align-middle whitespace-nowrap text-right">
+            <div class="inline-flex items-center space-x-4">
+              <!-- EDIT -->
+              <a
+                href="{{ url_for('admin.edit_movie', mid=m.movie_id) }}"
+                class="text-blue-500 hover:text-blue-700 leading-none align-middle"
+              >
+                Edit
+              </a>
+          
+              <!-- DELETE -->
+              <form
+                action="{{ url_for('admin.delete_movie', mid=m.movie_id) }}"
+                method="post"
+                class="inline-flex items-center"
+              >
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button
+                  type="submit"
+                  class="relative -top-4 text-red-600 hover:text-red-800"
+                  onclick="return confirm('Do you really want to delete {{ m.title }}?');"
+                >
+                  Delete
+                </button>
+              </form>
+            </div>
+          </td>     
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if more %}
+  <div class="mt-4 text-center">
+    <a href="{{ url_for('admin.list_movies', page=page+1) }}"
+       class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+      More
+    </a>
+  </div>
+  {% endif %}
+{% endblock %}

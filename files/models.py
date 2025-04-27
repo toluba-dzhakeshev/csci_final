@@ -1,7 +1,9 @@
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship
-from sqlalchemy import func
+from sqlalchemy import func, Boolean
+from datetime import datetime
+from sqlalchemy.dialects.postgresql import JSONB
 
 db = SQLAlchemy()
 
@@ -36,6 +38,10 @@ class User(UserMixin, db.Model):
     password   = db.Column(db.Text, nullable=False)
     is_admin   = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, server_default=func.now())
+    
+    ########################
+    active     = db.Column(db.Boolean,    default=True,   nullable=False)
+    ########################
 
     favorites = db.relationship('Movie', secondary='favorites', back_populates='favorited_by')
     ratings   = db.relationship('Rating', back_populates='user')
@@ -43,6 +49,12 @@ class User(UserMixin, db.Model):
     def get_id(self):
         # Flask-Login stores this value in the session
         return str(self.user_id)
+    
+    ########################
+    @property
+    def is_active(self):
+        return self.active
+    ########################
 
 class Movie(db.Model):
     __tablename__ = 'movies'
@@ -119,4 +131,16 @@ class CastMember(db.Model):
     cast_id         = db.Column(db.Integer, primary_key=True)
     cast_name       = db.Column(db.String, unique=True, nullable=False)
     movies          = relationship('Movie', secondary='movie_cast', back_populates='cast_members')
+    
+###########################################################
+class ActivityLog(db.Model):
+    __tablename__ = 'activity_log'
+
+    id         = db.Column(db.Integer, primary_key=True)
+    user_id    = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    action     = db.Column(db.String(50),    nullable=False)   # e.g. 'search', 'toggle_fav', 'rate_model'
+    detail     = db.Column(JSONB,            nullable=True)    # arbitrary JSON payload
+    created_at = db.Column(db.DateTime,      nullable=False, default=datetime.utcnow)
+
+    user = db.relationship('User', backref=db.backref('activity_logs', lazy='dynamic'))
 

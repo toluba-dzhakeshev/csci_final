@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>MovieRecApp</title>
+  <title>Find Movies</title>
 
   <!-- Tailwind via CDN with class-based dark mode -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -26,6 +26,9 @@
     rel="stylesheet"
   >
 
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='/images/favicon.ico') }}">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='/images/favicon.ico') }}">
+
   <!-- your custom CSS (star widgets, any overrides) -->
   <link
     rel="stylesheet"
@@ -44,9 +47,24 @@
       {% if current_user.is_authenticated %}
         <span>Hi, {{ current_user.email }}</span>
         <a href="{{ url_for('main.favorites') }}" class="hover:underline">Favorites</a>
+      <!-- ################################################################### -->
         {% if current_user.is_admin %}
-          <a href="{{ url_for('admin.list_users') }}" class="hover:underline">Admin</a>
+          <div class="inline-flex space-x-4">
+            <a href="{{ url_for('admin.list_users') }}" class="hover:underline">
+              Users
+            </a>
+            <a href="{{ url_for('admin.list_movies') }}" class="hover:underline">
+              Movies
+            </a>
+            <a href="{{ url_for('admin.view_activity') }}" class="hover:underline">
+              Activity Log
+            </a>
+            <a href="{{ url_for('admin.stats') }}" class="hover:underline">
+              Stats
+            </a>
+          </div>
         {% endif %}
+      <!-- ################################################################### -->
         <a href="{{ url_for('auth.logout') }}" class="hover:underline">Logout</a>
       {% else %}
         <a href="{{ url_for('auth.login') }}" class="hover:underline">Login</a>
