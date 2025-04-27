@@ -76,22 +76,29 @@ def list_movies():
 def _upsert_list(field_name, cls, rel, parent_obj):
     """
     Read comma-separated values from request.form[field_name],
-    find-or-create each cls by its “<tablename>_name” column,
+    find-or-create each cls by its “*_name” column,
     then assign the resulting list to parent_obj.<rel>.
     """
-    raw = request.form.get(field_name, '')
+    raw   = request.form.get(field_name, '')
     names = [n.strip() for n in raw.split(',') if n.strip()]
+
+    # Dynamically find the single "<something>_name" column on cls
+    name_cols = [c.name for c in cls.__table__.columns if c.name.endswith('_name')]
+    if not name_cols:
+        raise RuntimeError(f"No '*_name' column on {cls.__name__}")
+    name_col = name_cols[0]
+
     objs = []
     for name in names:
-        col = f"{cls.__tablename__[:-1]}_name"
-        obj = cls.query.filter_by(**{col: name}).first()
+        # look up by that column
+        obj = cls.query.filter(getattr(cls, name_col) == name).first()
         if not obj:
-            obj = cls(**{col: name})
+            obj = cls(**{name_col: name})
             db.session.add(obj)
             db.session.flush()
         objs.append(obj)
-    setattr(parent_obj, rel, objs)
 
+    setattr(parent_obj, rel, objs)
 
 @admin_bp.route('/movies/new', methods=['GET', 'POST'])
 @login_required

@@ -143,4 +143,3 @@ class ActivityLog(db.Model):
     created_at = db.Column(db.DateTime,      nullable=False, default=datetime.utcnow)
 
     user = db.relationship('User', backref=db.backref('activity_logs', lazy='dynamic'))
-

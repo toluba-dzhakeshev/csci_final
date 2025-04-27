@@ -5,6 +5,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 from sqlalchemy import func
 from app import model, cache
+import json
 
 main_bp = Blueprint('main', __name__, template_folder='templates')
 
@@ -93,7 +94,6 @@ def toggle_fav(mid):
 @main_bp.route('/recommend', methods=['GET','POST'])
 @login_required
 def recommend():
-    
     # 1) Handle the form submit
     if request.method == 'POST':
         params = {
@@ -126,33 +126,62 @@ def recommend():
     offset   = int(request.args.get('offset', 0))
     limit    = int(request.args.get('limit', 5))
 
-    # 3) Filter + score + sort exactly as before…
+    # Log the search
+    log_activity(
+        current_user.user_id,
+        'search',
+        detail={
+            'description': desc,
+            'genre': genre,
+            'studio': studio,
+            'director': director,
+            'producer': producer,
+            'cast_member': cast,
+            'year_from': yf,
+            'year_to': yt,
+            'rating_from': rf,
+            'rating_to': rt
+        }
+    )
+
+    # 3) Filter + score + sort
     q = Movie.query
     if genre:    q = q.join(Movie.genres).filter(Genre.genre_id   == int(genre))
     if studio:   q = q.join(Movie.studios).filter(Studio.studio_id  == int(studio))
     if director: q = q.filter(Movie.director_id     == int(director))
     if producer: q = q.join(Movie.producers).filter(Producer.producer_id == int(producer))
-    if cast:     q = q.join(Movie.cast_members).filter(CastMember.cast_id    == int(cast))
+    if cast:     q = q.join(Movie.cast_members).filter(CastMember.cast_id == int(cast))
     if yf:       q = q.join(Movie.year).filter(Year.year_value       >= int(yf))
     if yt:       q = q.join(Movie.year).filter(Year.year_value       <= int(yt))
     if rf:       q = q.filter(Movie.avg_rating         >= float(rf))
     if rt:       q = q.filter(Movie.avg_rating         <= float(rt))
     candidates = q.all()
 
-    emb_q   = model.encode(desc)
+    emb_q = model.encode(desc)
+    if getattr(emb_q, "ndim", None) == 2:
+        emb_q = emb_q.squeeze(0)
+
     results = []
     for m in candidates:
         if not Favorite.query.get((current_user.user_id, m.movie_id)):
-            arr = np.fromstring(m.embeddings.strip('[]'), sep=' ')
-            sim = (arr @ emb_q) / (np.linalg.norm(arr) * np.linalg.norm(emb_q))
+            # parse stored JSON embeddings
+            try:
+                vals = json.loads(m.embeddings)
+            except json.JSONDecodeError:
+                txt = m.embeddings.strip('[]').strip()
+                vals = [float(x) for x in txt.split() if x]
+            arr = np.array(vals, dtype=float)
+
+            sim = arr.dot(emb_q) / (np.linalg.norm(arr) * np.linalg.norm(emb_q))
             results.append((sim, m))
+
     results.sort(key=lambda x: x[0], reverse=True)
 
-    # 4) Slice out just this page
+    # 4) Pagination slice
     page     = results[offset:offset+limit]
     has_more = len(results) > offset + limit
 
-    # 5) If it’s an AJAX “More” call, return JSON *inside* this block*
+    # 5) AJAX “More” response
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         payload = [{
             'sim':         round(sim,2),
@@ -168,7 +197,7 @@ def recommend():
             'cast':        [c.cast_name for c in m.cast_members],
             'duration':    m.duration,
             'page_url':    m.page_url,
-            'faved':      Favorite.query.get((current_user.user_id, m.movie_id)) is not None,
+            'faved':       Favorite.query.get((current_user.user_id, m.movie_id)) is not None,
             'avg_rating':  m.avg_rating,
         } for sim,m in page]
         return jsonify({
@@ -176,30 +205,10 @@ def recommend():
             'next_offset': offset + limit,
             'has_more':    has_more
         })
-        
-    ###################################################
-    if request.method == 'GET':
-    # … gather desc, genre, studio, etc. …
-        log_activity(
-        current_user.user_id,
-        'search',
-        detail={
-            'description': desc,
-            'genre': genre,
-            'studio': studio,
-            'director': director,
-            'producer': producer,
-            'cast_member': cast,
-            'year_from': yf,
-            'year_to': yt,
-            'rating_from': rf,
-            'rating_to': rt
-        }
-        )
-    ###################################################
 
-    # 6) Otherwise (initial page load), render the HTML template
-    return render_template('results.html',
+    # 6) Render the initial HTML
+    return render_template(
+        'results.html',
         recommendations=page,
         next_offset=offset + limit,
         has_more=has_more
@@ -275,3 +284,4 @@ def log_activity(user_id, action, detail=None):
     db.session.add(entry)
     # you can commit immediately or let the enclosing handler commit later
     db.session.commit()
+    
