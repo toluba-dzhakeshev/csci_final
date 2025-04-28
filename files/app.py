@@ -7,6 +7,8 @@ from flask_wtf import CSRFProtect
 from sentence_transformers import SentenceTransformer
 from flask_caching import Cache
 from admin import admin_bp
+import os
+from dotenv import load_dotenv
 
 csrf = CSRFProtect()
 
@@ -35,6 +37,13 @@ def create_app():
     app.config.from_mapping(
         SECRET_KEY='your-secret-key',
         SQLALCHEMY_DATABASE_URI='postgresql://tolubai:password@localhost:5432/movies_db',
+        # SQLALCHEMY_DATABASE_URI = (
+        #     "postgresql://doadmin:PASSWORD"
+        #     "@db-postgresql-nyc3-03675-do-user-21639042-0.m.db.ondigitalocean.com"
+        #     ":25060/movies_db"
+        #     "?sslmode=require"
+        #     "&sslrootcert=./do_ca.crt"
+        # ),
         SQLALCHEMY_TRACK_MODIFICATIONS=False
     )
 

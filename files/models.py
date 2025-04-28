@@ -1,7 +1,7 @@
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship
-from sqlalchemy import func, Boolean
+from sqlalchemy import func, Boolean, text
 from datetime import datetime
 from sqlalchemy.dialects.postgresql import JSONB
 
@@ -40,7 +40,12 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, server_default=func.now())
     
     ########################
-    active     = db.Column(db.Boolean,    default=True,   nullable=False)
+    active     = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True,                  # SQLAlchemy-side default on new objects
+        server_default=text('TRUE')    # Postgres metadata-only default
+    )
     ########################
 
     favorites = db.relationship('Movie', secondary='favorites', back_populates='favorited_by')
