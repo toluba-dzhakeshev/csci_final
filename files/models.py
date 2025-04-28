@@ -43,8 +43,8 @@ class User(UserMixin, db.Model):
     active     = db.Column(
         db.Boolean,
         nullable=False,
-        default=True,                  # SQLAlchemy-side default on new objects
-        server_default=text('TRUE')    # Postgres metadata-only default
+        default=True,
+        server_default=text('TRUE')
     )
     ########################
 
@@ -52,7 +52,6 @@ class User(UserMixin, db.Model):
     ratings   = db.relationship('Rating', back_populates='user')
     
     def get_id(self):
-        # Flask-Login stores this value in the session
         return str(self.user_id)
     
     ########################
@@ -104,7 +103,6 @@ class Year(db.Model):
     __tablename__  = 'years'
     year_id        = db.Column(db.Integer, primary_key=True)
     year_value     = db.Column(db.Integer, unique=True, nullable=False)
-    # back‐ref so Year.movies gives you all movies in that year
     movies         = relationship('Movie', back_populates='year')
 
 class Genre(db.Model):
@@ -143,8 +141,8 @@ class ActivityLog(db.Model):
 
     id         = db.Column(db.Integer, primary_key=True)
     user_id    = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
-    action     = db.Column(db.String(50),    nullable=False)   # e.g. 'search', 'toggle_fav', 'rate_model'
-    detail     = db.Column(JSONB,            nullable=True)    # arbitrary JSON payload
+    action     = db.Column(db.String(50),    nullable=False)
+    detail     = db.Column(JSONB,            nullable=True)
     created_at = db.Column(db.DateTime,      nullable=False, default=datetime.utcnow)
 
     user = db.relationship('User', backref=db.backref('activity_logs', lazy='dynamic'))

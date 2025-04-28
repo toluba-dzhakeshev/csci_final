@@ -17,45 +17,39 @@
 
 /* ──────────────────────────────────────────────────────────────────────────────────────────────────────── */
 
-/* ─── 0) Vertical spacing & positioning ───────────────────────────────── */
 .noUi-target.noUi-horizontal {
-  margin: 2rem 0 !important;  /* space between sliders */
-  position: relative;         /* needed for tooltip positioning */
+  margin: 2rem 0 !important;
+  position: relative;
 }
 
-/* ─── 1) Slider Rail & Base ───────────────────────────────────────────── */
 .noUi-target.noUi-horizontal,
 .noUi-target.noUi-horizontal .noUi-base {
-  height: 4px !important;                       /* thin rail */
-  border-radius: 2px !important;                /* rounded ends */
-  background: var(--tw-bg-gray-600) !important; /* rail color */
-  overflow: visible !important;                 /* let handles overflow */
+  height: 4px !important;
+  border-radius: 2px !important;
+  background: var(--tw-bg-gray-600) !important;
+  overflow: visible !important;
 }
 
-/* ─── 2) Filled Portion ───────────────────────────────────────────────── */
 .noUi-target.noUi-horizontal .noUi-connect {
-  background: var(--tw-bg-blue-500) !important; /* accent color */
+  background: var(--tw-bg-blue-500) !important;
 }
 
-/* ─── 3) Hide Default Pips/Tick-Marks ─────────────────────────────────── */
 .noUi-target.noUi-horizontal .noUi-pips {
   display: none !important;
 }
 
-/* ─── 4) Handles: Size, Shape, Shadow ────────────────────────────────── */
 .noUi-target.noUi-horizontal .noUi-handle {
   width: 16px !important;
   height: 16px !important;
-  top: -6px !important;                         /* vertically center */
-  border-radius: 50% !important;                /* perfect circle */
-  background: #000 !important;                  /* light-mode fill */
-  border: 2px solid #000 !important;            /* light-mode border */
+  top: -6px !important;
+  border-radius: 50% !important;
+  background: #000 !important;
+  border: 2px solid #000 !important;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
   cursor: grab !important;
   transition: transform .2s !important;
 }
 
-/* ─── 5) Handle Hover & Active States ───────────────────────────────── */
 .noUi-target.noUi-horizontal .noUi-handle:hover {
   transform: scale(1.2) !important;
 }
@@ -63,44 +57,39 @@
   background: var(--tw-bg-gray-200) !important;
 }
 
-/* ─── 6) Dark Mode Override: White Knobs ────────────────────────────── */
 html.dark .noUi-target.noUi-horizontal .noUi-handle {
   background: #fff !important;
   border-color: #fff !important;
 }
 
-/* ─── 7) Remove the tiny grip-bars inside each handle ───────────────── */
 .noUi-target.noUi-horizontal .noUi-handle::before,
 .noUi-target.noUi-horizontal .noUi-handle::after {
   display: none !important;
 }
 
-/* ─── 8) Tooltip: only the number, positioned under each handle ──────── */
 .noUi-tooltip {
   position: absolute !important;
-  top: 0 !important;                              /* anchor at handle */
+  top: 0 !important;
   left: 50% !important;
-  transform: translate(-50%, 28px) !important;     /* 28px down */
+  transform: translate(-50%, 28px) !important;
 
-  font-size: 0.75rem !important;                   /* small text */
-  color: var(--tw-text-gray-800) !important;       /* light-mode text */
+  font-size: 0.75rem !important;
+  color: var(--tw-text-gray-800) !important;
 
-  background: transparent !important;              /* no box */
-  border: none !important;                         /* no outline */
+  background: transparent !important;
+  border: none !important;
   box-shadow: none !important;
   padding: 0 !important;
   white-space: nowrap !important;
 
-  pointer-events: none !important;                 /* click-through */
-  z-index: 9 !important;                           /* above rail */
+  pointer-events: none !important;
+  z-index: 9 !important;
 }
 
-/* ─── 9) Dark Mode Tooltip Text ─────────────────────────────────────── */
 html.dark .noUi-tooltip {
-  color: var(--tw-text-gray-200) !important;       /* light text in dark mode */
+  color: var(--tw-text-gray-200) !important;
 }
 
-/* ─── 10) Remove any leftover arrow/connector ────────────────────────── */
 .noUi-tooltip::before,
 .noUi-tooltip::after {
   display: none !important;
@@ -108,104 +97,84 @@ html.dark .noUi-tooltip {
 
 /* ──────────────────────────────────────────────────────────────────────────────────────────────────────── */
 
-/* 1) Pull the title/label closer to its slider */
 h2.slider‐title,
 h3.slider‐title,
 label.slider‐title {
   display: block;
-  margin-bottom: 0.25rem !important;  /* shrink the gap under the title */
+  margin-bottom: 0.25rem !important;
 }
 
-/* 2) Give each slider plenty of breathing room below */
 .noUi-target.noUi-horizontal {
-  margin: 0.5rem 0 3rem !important;    /* top 0.5rem, bottom 3rem */
+  margin: 0.5rem 0 3rem !important;
 }
 
-/* 3) Push your Search button down so it can’t collide */
 button[type="submit"],
 input[type="submit"] {
   display: block;
-  margin-top: 2rem !important;         /* or whatever works in your layout */
+  margin-top: 2rem !important;
 }
 
 /* ──────────────────────────────────────────────────────────────────────────────────────────────────────── */
 
-/* Dark-mode overrides for the single-value Select2 box */
 .dark .select2-container--default .select2-selection--single {
-  background-color: #2d3748;   /* Tailwind’s gray-800 */
-  border-color:     #4a5568;   /* Tailwind’s gray-600 */
-  color:            #edf2f7;   /* Tailwind’s gray-100 */
+  background-color: #2d3748;
+  border-color:     #4a5568;
+  color:            #edf2f7;
 }
 
-/* The placeholder / selected text */
 .dark .select2-container--default .select2-selection__rendered {
   color: #edf2f7;
 }
 
-/* The dropdown panel */
 .dark .select2-container--default .select2-dropdown {
   background-color: #2d3748;
   color:            #edf2f7;
   border-color:     #4a5568;
 }
 
-/* Hover/highlight inside the dropdown */
 .dark .select2-container--default
       .select2-results__option--highlighted[aria-selected] {
-  background-color: #4a5568;   /* Tailwind’s gray-600 */
+  background-color: #4a5568;
   color:            #edf2f7;
 }
 
 /* ──────────────────────────────────────────────────────────────────────────────────────────────────────── */
 
-/* ------------------------------------------------------------------
-   DARK-MODE OVERRIDES FOR SELECT2
-   This assumes your <html> or <body> gets class="dark" when you toggle.
-   ------------------------------------------------------------------ */
-
-/* The “selection box” itself */
 .dark .select2-container--default .select2-selection--single {
-  background-color: #2d3748;   /* Tailwind gray-800 */
-  border: 1px solid #4a5568;   /* Tailwind gray-600 */
-  color: #edf2f7;              /* Tailwind gray-100 */
+  background-color: #2d3748;
+  border: 1px solid #4a5568;
+  color: #edf2f7;
 }
 
-/* The area that shows the placeholder / selected text */
 .dark .select2-container--default .select2-selection__rendered {
   color: #edf2f7;
 }
 
-/* The drop‐down arrow on the right */
 .dark .select2-container--default .select2-selection__arrow b {
   border-color: #edf2f7 transparent transparent transparent;
 }
 
-/* The search input inside the dropdown */
 .dark .select2-container--default .select2-search--dropdown .select2-search__field {
   background-color: #2d3748;
   color:            #edf2f7;
   border:           1px solid #4a5568;
 }
 
-/* The dropdown menu panel */
 .dark .select2-container--default .select2-dropdown {
   background-color: #2d3748;
   border: 1px solid #4a5568;
 }
 
-/* Each option in the list */
 .dark .select2-container--default .select2-results__option {
   color: #edf2f7;
 }
 
-/* Hovered/keyboard‐highlighted option */
 .dark .select2-container--default
       .select2-results__option--highlighted[aria-selected] {
-  background-color: #4a5568;  /* gray-600 */
+  background-color: #4a5568;
   color:            #edf2f7;
 }
 
-/* Already-selected option in a multi-select (if you ever use one) */
 .dark .select2-container--default .select2-results__option[aria-selected=true] {
   background-color: #4a5568;
   color:            #edf2f7;

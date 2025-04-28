@@ -1,13 +1,7 @@
-// 1) CSRF token (grabbed once on load)
-//
 const csrfToken = document
   .querySelector('meta[name="csrf-token"]')
   .getAttribute('content');
 
-
-//
-// 2) Favorite toggle via AJAX
-//
 async function toggleFavorite(btn) {
   const mid   = btn.dataset.mid;
   const faved = btn.dataset.faved === '1';
@@ -29,25 +23,19 @@ async function toggleFavorite(btn) {
   }
 }
 
-//
-// 3) More Info panel toggle
-//
 function toggleDetails(detailsId, btn) {
   const panel    = document.getElementById(detailsId);
   const isHidden = panel.classList.toggle('hidden');
   btn.textContent = isHidden ? 'More Info' : 'Less Info';
 }
 
-//
-// 4) AJAX-submit your 10-star model-rating widget (no page reload)
-//
 document.body.addEventListener('change', async e => {
   const input = e.target;
-  // only care about our model_rating radios
+
   if (input.name !== 'model_rating') return;
   
   const form = input.closest('.model-rating-form');
-  const url  = form.action;                // should be "/rate_model"
+  const url  = form.action;
   const data = new URLSearchParams(new FormData(form));
   
   const resp = await fetch(url, {
@@ -61,18 +49,13 @@ document.body.addEventListener('change', async e => {
   });
 
   if (resp.status === 204) {
-    // success! you could flash a toast or highlight the star here
     console.log(`Rated movie ${data.get('movie_id')} → ${data.get('model_rating')}`);
   } else {
     console.error('Model-rating failed', resp);
   }
 });
 
-//
-// 5) Initialize everything else once the DOM + libraries are ready
-//
 window.addEventListener('DOMContentLoaded', () => {
-  // A) Select2 for Producer & Cast (reads AJAX URL from data-attribute)
   const producerSelect = document.getElementById('producer');
   if (producerSelect && window.jQuery && jQuery.fn.select2) {
     $(producerSelect).select2({
@@ -105,7 +88,6 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // B) noUiSlider for Year
   const yearSlider = document.getElementById('year-slider');
   if (yearSlider && typeof noUiSlider !== 'undefined') {
     const fromInput = document.getElementById('year_from');
@@ -126,7 +108,6 @@ window.addEventListener('DOMContentLoaded', () => {
     })
   }
 
-  // C) noUiSlider for Rating
   const ratingSlider = document.getElementById('rating-slider');
   if (ratingSlider && typeof noUiSlider !== 'undefined') {
     const fromInput = document.getElementById('rating_from');
@@ -148,7 +129,6 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// delegate clicks anywhere in the body
 document.body.addEventListener('click', async e => {
     const btn = e.target.closest('#load-more');
     if (!btn) return;
@@ -167,7 +147,6 @@ document.body.addEventListener('click', async e => {
     const container = document.getElementById('rec-container');
   
     movies.forEach(m => {
-      // this HTML is verbatim what we put in results.html
       const html = `
         <div class="flex bg-gray-100 dark:bg-gray-800 rounded shadow overflow-hidden mb-6">
           <img src="${m.poster_url}" alt="${m.title} poster" class="w-1/3 object-cover">
@@ -243,7 +222,6 @@ $('#genres, #studios, #producers, #cast_members').select2({
   placeholder: 'Start typing to add or select…'
 });
 
-// single‐value tagging for director
 $('#director').select2({
   tags: true,
   placeholder: 'Pick or create a director…',

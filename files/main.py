@@ -9,15 +9,13 @@ import json
 
 main_bp = Blueprint('main', __name__, template_folder='templates')
 
-@cache.cached(timeout=300)                  # cache for 5 minutes
+@cache.cached(timeout=300)
 @main_bp.route('/', methods=['GET'])
 def index():
-    # only fetch the three small filter lists
     genres    = Genre.query.order_by(Genre.genre_name).all()
     studios   = Studio.query.order_by(Studio.studio_name).all()
     directors = Director.query.order_by(Director.director_name).all()
 
-    # slider bounds
     min_year   = db.session.query(func.min(Year.year_value)).scalar() or 1900
     max_year   = db.session.query(func.max(Year.year_value)).scalar() or 2025
     min_rating = db.session.query(func.min(Movie.avg_rating)).scalar() or 0.0
@@ -33,7 +31,7 @@ def index():
         max_rating=max_rating
     )
     
-@cache.cached(timeout=60, query_string=True)  # cache each search term for 1 minute
+@cache.cached(timeout=60, query_string=True)
 @main_bp.route('/producer_search')
 @login_required
 def producer_search():
@@ -83,18 +81,15 @@ def toggle_fav(mid):
     )
     ###################################################
 
-    # If this was called via fetch()/AJAX, send 204
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return ('', 204)
 
-    # otherwise (normal form submit), redirect as before
     next_page = request.form.get('next') or request.referrer or url_for('main.index')
     return redirect(next_page)
 
 @main_bp.route('/recommend', methods=['GET','POST'])
 @login_required
 def recommend():
-    # 1) Handle the form submit
     if request.method == 'POST':
         params = {
             'description': request.form['description'],
@@ -112,7 +107,6 @@ def recommend():
         }
         return redirect(url_for('main.recommend', **params))
 
-    # 2) Build the full list on GET
     desc     = request.args.get('description','')
     genre    = request.args.get('genre') or None
     studio   = request.args.get('studio') or None
@@ -126,7 +120,6 @@ def recommend():
     offset   = int(request.args.get('offset', 0))
     limit    = int(request.args.get('limit', 5))
 
-    # Log the search
     log_activity(
         current_user.user_id,
         'search',
@@ -144,7 +137,6 @@ def recommend():
         }
     )
 
-    # 3) Filter + score + sort
     q = Movie.query
     if genre:    q = q.join(Movie.genres).filter(Genre.genre_id   == int(genre))
     if studio:   q = q.join(Movie.studios).filter(Studio.studio_id  == int(studio))
@@ -164,7 +156,6 @@ def recommend():
     results = []
     for m in candidates:
         if not Favorite.query.get((current_user.user_id, m.movie_id)):
-            # parse stored JSON embeddings
             try:
                 vals = json.loads(m.embeddings)
             except json.JSONDecodeError:
@@ -177,11 +168,9 @@ def recommend():
 
     results.sort(key=lambda x: x[0], reverse=True)
 
-    # 4) Pagination slice
     page     = results[offset:offset+limit]
     has_more = len(results) > offset + limit
 
-    # 5) AJAX “More” response
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         payload = [{
             'sim':         round(sim,2),
@@ -206,7 +195,6 @@ def recommend():
             'has_more':    has_more
         })
 
-    # 6) Render the initial HTML
     return render_template(
         'results.html',
         recommendations=page,
@@ -217,28 +205,27 @@ def recommend():
 @main_bp.route('/results')
 @login_required
 def results():
-    # parse args
     query     = request.args.get('query','')
     genre     = request.args.get('genre','')
     ymn, ymx  = request.args.get('year_from'), request.args.get('year_to')
     rmn, rmx  = request.args.get('rating_from'), request.args.get('rating_to')
-    # 1) build base query
+
     q = Movie.query
     if genre:
         q = q.join(Movie.genres).filter(Genre.genre_name==genre)
-    # 2) year filter
+
     if ymn: q = q.join(Movie.year).filter(Year.year_value>=int(ymn))
     if ymx: q = q.join(Movie.year).filter(Year.year_value<=int(ymx))
-    # 3) rating filter
+    
     if rmn: q = q.filter(Movie.avg_rating>=float(rmn))
     if rmx: q = q.filter(Movie.avg_rating<=float(rmx))
-    # 4) similarity scoring
+    
     q_emb = model.encode(query)
     scored = []
     for m in q.all():
         arr = np.fromstring(m.embeddings.strip('[]'), sep=' ')
         sim = np.dot(q_emb,arr)/(np.linalg.norm(q_emb)*np.linalg.norm(arr))
-        # skip favorites
+        
         if not Favorite.query.get((current_user.user_id,m.movie_id)):
             scored.append((sim,m))
     scored.sort(key=lambda x:-x[0])
@@ -250,7 +237,6 @@ def rate_model():
     movie_id = int(request.form['movie_id'])
     score    = int(request.form['model_rating'])
 
-    # upsert into your existing ratings table
     rec = Rating.query.get((current_user.user_id, movie_id))
     if rec:
         rec.rating = score
@@ -271,7 +257,6 @@ def rate_model():
     )
     ###############################################
     
-    # If it was an AJAX call, just return 204 No Content
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return ('', 204)
     
@@ -282,6 +267,5 @@ def rate_model():
 def log_activity(user_id, action, detail=None):
     entry = ActivityLog(user_id=user_id, action=action, detail=detail)
     db.session.add(entry)
-    # you can commit immediately or let the enclosing handler commit later
     db.session.commit()
     

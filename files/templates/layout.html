@@ -6,21 +6,17 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Find Movies</title>
 
-  <!-- Tailwind via CDN with class-based dark mode -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    // Enable toggling via <html class="dark">
     tailwind.config = {
       darkMode: 'class',
     }
   </script>
 
-  <!-- noUiSlider CSS -->
   <link
     href="https://cdn.jsdelivr.net/npm/nouislider@15.6.1/dist/nouislider.min.css"
     rel="stylesheet"
   >
-  <!-- Select2 CSS -->
   <link
     href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
     rel="stylesheet"
@@ -29,7 +25,6 @@
   <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='/images/favicon.ico') }}">
   <link rel="shortcut icon" href="{{ url_for('static', filename='/images/favicon.ico') }}">
 
-  <!-- your custom CSS (star widgets, any overrides) -->
   <link
     rel="stylesheet"
     href="{{ url_for('static', filename='styles.css') }}"
@@ -84,12 +79,10 @@
     {% block content %}{% endblock %}
   </main>
 
-  <!-- shared JS libs (noUiSlider, Select2, jQuery) -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/nouislider@15.6.1/dist/nouislider.min.js"></script>
 
-  <!-- theme‐toggle + button‐label logic -->
   <script>
     const themeToggle = document.getElementById('theme-toggle');
 
@@ -107,11 +100,9 @@
       updateThemeLabel();
     });
 
-    // set the correct label on initial load
     updateThemeLabel();
   </script>
 
-  <!-- page-specific JS (favorites, sliders, Select2, "More" button, star-rating) -->
   {% block scripts %}
     <script defer src="{{ url_for('static', filename='js/index.js') }}"></script>
   {% endblock %}

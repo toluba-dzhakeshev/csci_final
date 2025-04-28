@@ -32,7 +32,6 @@ def list_users():
 def toggle_user(uid):
     u = User.query.get_or_404(uid)
 
-    # flip the real column
     u.active = not u.active
     db.session.commit()
     flash(
@@ -45,14 +44,11 @@ def toggle_user(uid):
 @login_required
 @admin_required
 def list_movies():
-    # read “page” from the querystring, default to 1
     page     = request.args.get('page', 1, type=int)
     per_page = 10
 
-    # total count for “More” logic
     total    = Movie.query.count()
 
-    # fetch exactly 10 for this page
     movies = (
       Movie.query
            .order_by(Movie.title)
@@ -61,7 +57,6 @@ def list_movies():
            .all()
     )
 
-    # do we have more beyond this page?
     more = page * per_page < total
 
     return render_template(
@@ -74,15 +69,9 @@ def list_movies():
 ##################################################################
 
 def _upsert_list(field_name, cls, rel, parent_obj):
-    """
-    Read comma-separated values from request.form[field_name],
-    find-or-create each cls by its “*_name” column,
-    then assign the resulting list to parent_obj.<rel>.
-    """
     raw   = request.form.get(field_name, '')
     names = [n.strip() for n in raw.split(',') if n.strip()]
 
-    # Dynamically find the single "<something>_name" column on cls
     name_cols = [c.name for c in cls.__table__.columns if c.name.endswith('_name')]
     if not name_cols:
         raise RuntimeError(f"No '*_name' column on {cls.__name__}")
@@ -90,7 +79,6 @@ def _upsert_list(field_name, cls, rel, parent_obj):
 
     objs = []
     for name in names:
-        # look up by that column
         obj = cls.query.filter(getattr(cls, name_col) == name).first()
         if not obj:
             obj = cls(**{name_col: name})
@@ -114,7 +102,6 @@ def add_movie():
     if request.method == 'POST':
         from app import model
 
-        # 1) Scalars
         title       = request.form['title']
         description = request.form['description']
         avg_rating  = float(request.form['avg_rating'])
@@ -122,7 +109,6 @@ def add_movie():
         poster_url  = request.form['poster_url']
         page_url    = request.form['page_url']
 
-        # 2) Upsert Year
         year_val = int(request.form['year_value'])
         year = Year.query.filter_by(year_value=year_val).first()
         if not year:
@@ -130,7 +116,6 @@ def add_movie():
             db.session.add(year)
             db.session.flush()
 
-        # 3) Upsert Director
         director_name = request.form['director']
         director = Director.query.filter_by(director_name=director_name).first()
         if not director:
@@ -138,10 +123,8 @@ def add_movie():
             db.session.add(director)
             db.session.flush()
 
-        # 4) Embeddings
         emb = model.encode(description).tolist()
 
-        # 5) Create Movie
         m = Movie(
             title=title,
             description=description,
@@ -154,7 +137,6 @@ def add_movie():
             embeddings=json.dumps(emb)
         )
 
-        # 6) Upsert each comma-list
         _upsert_list('genres',       Genre,      'genres',       m)
         _upsert_list('studios',      Studio,     'studios',      m)
         _upsert_list('producers',    Producer,   'producers',    m)
@@ -192,7 +174,6 @@ def edit_movie(mid):
     if request.method == 'POST':
         from app import model
 
-        # Update scalars
         m.title       = request.form['title']
         m.description = request.form['description']
         m.avg_rating  = float(request.form['avg_rating'])
@@ -200,7 +181,6 @@ def edit_movie(mid):
         m.poster_url  = request.form['poster_url']
         m.page_url    = request.form['page_url']
 
-        # Upsert Year
         year_val = int(request.form['year_value'])
         year = Year.query.filter_by(year_value=year_val).first()
         if not year:
@@ -209,7 +189,6 @@ def edit_movie(mid):
             db.session.flush()
         m.year = year
 
-        # Upsert Director
         director_name = request.form['director']
         director = Director.query.filter_by(director_name=director_name).first()
         if not director:
@@ -218,10 +197,8 @@ def edit_movie(mid):
             db.session.flush()
         m.director = director
 
-        # Recompute embeddings
         m.embeddings = json.dumps(model.encode(m.description).tolist())
 
-        # Clear & refill M2M via helper
         _upsert_list('genres',       Genre,      'genres',       m)
         _upsert_list('studios',      Studio,     'studios',      m)
         _upsert_list('producers',    Producer,   'producers',    m)
@@ -248,7 +225,6 @@ def edit_movie(mid):
 @login_required
 @admin_required
 def stats():
-    # most-favorited
     fav_counts = (
       db.session.query(Movie.title, func.count().label('cnt'))
                 .join(Favorite)
@@ -258,7 +234,6 @@ def stats():
                 .all()
     )
 
-    # average model-rating per movie
     avg_model = (
       db.session.query(
           Movie.title,

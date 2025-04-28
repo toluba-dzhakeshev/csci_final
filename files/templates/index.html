@@ -6,7 +6,6 @@
   <form action="{{ url_for('main.recommend') }}" method="POST">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
-    <!-- Movie Description -->
     <div>
       <label for="query" class="block mb-2 font-medium">Movie Description</label>
       <input
@@ -27,9 +26,7 @@
       >
     </div>
 
-    <!-- Basic Filters -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-      <!-- Genre -->
       <div>
         <label class="block mb-1">Genre</label>
         <select name="genre"
@@ -50,7 +47,6 @@
         </select>
       </div>
 
-      <!-- Studio -->
       <div>
         <label class="block mb-1">Studio</label>
         <select name="studio"
@@ -71,7 +67,6 @@
         </select>
       </div>
 
-      <!-- Director -->
       <div>
         <label class="block mb-1">Director</label>
         <select name="director"
@@ -93,9 +88,7 @@
       </div>
     </div>
 
-    <!-- AJAX-powered Autocomplete Filters -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-      <!-- Producer -->
       <div>
         <label class="block mb-1">Producer</label>
         <select
@@ -114,7 +107,6 @@
         </select>
       </div>
 
-      <!-- Cast Member -->
       <div>
         <label class="block mb-1">Cast Member</label>
         <select
@@ -134,7 +126,6 @@
       </div>
     </div>
 
-    <!-- Sliders -->
     <div class="slider-wrapper my-6">
       <label class="block font-medium">Movie Year</label>
       <div id="year-slider" class="w-full"></div>
@@ -149,7 +140,6 @@
       <input type="hidden" name="rating_to"   id="rating_to"   value="{{ max_rating }}">
     </div>
 
-    <!-- Submit -->
     <div>
       <button
         type="submit"
