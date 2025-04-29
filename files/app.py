@@ -32,14 +32,14 @@ def create_app():
     
     app.config.from_mapping(
         SECRET_KEY='your-secret-key',
-        # SQLALCHEMY_DATABASE_URI='postgresql://tolubai:password@localhost:5432/movies_db',
-        SQLALCHEMY_DATABASE_URI = (
-            "postgresql://doadmin:AVNS_UnBm0Ppb2AFhY6g8nGI"
-            "@db-postgresql-nyc3-03675-do-user-21639042-0.m.db.ondigitalocean.com"
-            ":25060/movies_db"
-            "?sslmode=require"
-            "&sslrootcert=./do_ca.crt"
-        ),
+        SQLALCHEMY_DATABASE_URI='postgresql://tolubai:password@localhost:5432/movies_db',
+        # SQLALCHEMY_DATABASE_URI = (
+        #     "postgresql://doadmin:AVNS_UnBm0Ppb2AFhY6g8nGI"
+        #     "@db-postgresql-nyc3-03675-do-user-21639042-0.m.db.ondigitalocean.com"
+        #     ":25060/movies_db"
+        #     "?sslmode=require"
+        #     "&sslrootcert=./do_ca.crt"
+        # ),
         SQLALCHEMY_TRACK_MODIFICATIONS=False
     )
 

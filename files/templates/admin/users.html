@@ -53,6 +53,7 @@
               <form action="{{ url_for('admin.toggle_user', uid=u.user_id) }}"
                     method="post"
                     class="inline-block align-middle">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit"
                         class="relative -top-4 align-middle font-medium text-blue-600 hover:text-blue-800 leading-none">
                   {% if u.is_active %}Disable{% else %}Re-enable{% endif %}

@@ -30,7 +30,45 @@ def index():
         min_rating=min_rating,
         max_rating=max_rating
     )
-    
+
+######################################################################################################
+@cache.cached(timeout=60, query_string=True)
+@main_bp.route('/genre_search')
+@login_required
+def genre_search():
+    q = request.args.get('q','')
+    matches = (Genre.query
+               .filter(Genre.genre_name.ilike(f'%{q}%'))
+               .order_by(Genre.genre_name)
+               .limit(20)
+               .all())
+    return jsonify([{"id": g.genre_id, "text": g.genre_name} for g in matches])
+
+@cache.cached(timeout=60, query_string=True)
+@main_bp.route('/studio_search')
+@login_required
+def studio_search():
+    q = request.args.get('q','')
+    matches = (Studio.query
+               .filter(Studio.studio_name.ilike(f'%{q}%'))
+               .order_by(Studio.studio_name)
+               .limit(20)
+               .all())
+    return jsonify([{"id": s.studio_id, "text": s.studio_name} for s in matches])
+
+@cache.cached(timeout=60, query_string=True)
+@main_bp.route('/director_search')
+@login_required
+def director_search():
+    q = request.args.get('q','')
+    matches = (Director.query
+               .filter(Director.director_name.ilike(f'%{q}%'))
+               .order_by(Director.director_name)
+               .limit(20)
+               .all())
+    return jsonify([{"id": d.director_id, "text": d.director_name} for d in matches])
+######################################################################################################
+
 @cache.cached(timeout=60, query_string=True)
 @main_bp.route('/producer_search')
 @login_required
@@ -93,10 +131,10 @@ def recommend():
     if request.method == 'POST':
         params = {
             'description': request.form['description'],
-            'genre':       request.form.get('genre',''),
-            'studio':      request.form.get('studio',''),
-            'director':    request.form.get('director',''),
-            'producer':    request.form.get('producer',''),
+            'genre':       request.form.get('genres',''),
+            'studio':      request.form.get('studios',''),
+            'director':    request.form.get('directors',''),
+            'producer':    request.form.get('producers',''),
             'cast_member': request.form.get('cast_member',''),
             'year_from':   request.form.get('year_from',''),
             'year_to':     request.form.get('year_to',''),
@@ -148,6 +186,42 @@ def recommend():
     if rf:       q = q.filter(Movie.avg_rating         >= float(rf))
     if rt:       q = q.filter(Movie.avg_rating         <= float(rt))
     candidates = q.all()
+    
+    if not desc:
+        all_movies = q.order_by(Movie.title).all()
+        page       = all_movies[offset:offset+limit]
+        has_more   = len(all_movies) > offset+limit
+
+        payload = [{
+            'sim':         0.0,
+            'movie_id':    m.movie_id,
+            'title':       m.title,
+            'poster_url':  m.poster_url,
+            'description': m.description,
+            'year':        m.year.year_value,
+            'genres':      [g.genre_name for g in m.genres],
+            'studios':     [s.studio_name for s in m.studios],
+            'director':    m.director.director_name,
+            'producers':   [p.producer_name for p in m.producers],
+            'cast':        [c.cast_name for c in m.cast_members],
+            'duration':    m.duration,
+            'page_url':    m.page_url,
+            'faved':       Favorite.query.get((current_user.user_id, m.movie_id)) is not None,
+            'avg_rating':  m.avg_rating,
+        } for m in page]
+
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({
+                'movies':      payload,
+                'next_offset': offset + limit,
+                'has_more':    has_more
+            })
+
+        return render_template('results.html',
+            recommendations=[(0.0, m) for m in page],
+            next_offset=offset+limit,
+            has_more=has_more
+        )
 
     emb_q = model.encode(desc)
     if getattr(emb_q, "ndim", None) == 2:

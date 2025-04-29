@@ -56,37 +56,83 @@ document.body.addEventListener('change', async e => {
 });
 
 window.addEventListener('DOMContentLoaded', () => {
-  const producerSelect = document.getElementById('producer');
-  if (producerSelect && window.jQuery && jQuery.fn.select2) {
-    $(producerSelect).select2({
-      placeholder: 'Any Producer',
-      allowClear:  true,
-      ajax: {
-        url: producerSelect.dataset.ajaxUrl,
-        dataType: 'json',
-        delay:    250,
-        data:     params => ({ q: params.term }),
-        processResults: data => ({ results: data })
-      },
-      minimumInputLength: 2
-    });
-  }
+  // const producerSelect = document.getElementById('producer');
+  // if (producerSelect && window.jQuery && jQuery.fn.select2) {
+  //   $(producerSelect).select2({
+  //     placeholder: 'Any Producer',
+  //     allowClear:  true,
+  //     ajax: {
+  //       url: producerSelect.dataset.ajaxUrl,
+  //       dataType: 'json',
+  //       delay:    250,
+  //       data:     params => ({ q: params.term }),
+  //       processResults: data => ({ results: data })
+  //     },
+  //     minimumInputLength: 2
+  //   });
+  // }
 
-  const castSelect = document.getElementById('cast_member');
-  if (castSelect && window.jQuery && jQuery.fn.select2) {
-    $(castSelect).select2({
-      placeholder: 'Any Cast Member',
-      allowClear:  true,
-      ajax: {
-        url: castSelect.dataset.ajaxUrl,
-        dataType: 'json',
-        delay:    250,
-        data:     params => ({ q: params.term }),
-        processResults: data => ({ results: data })
-      },
-      minimumInputLength: 2
-    });
-  }
+  // const castSelect = document.getElementById('cast_member');
+  // if (castSelect && window.jQuery && jQuery.fn.select2) {
+  //   $(castSelect).select2({
+  //     placeholder: 'Any Cast Member',
+  //     allowClear:  true,
+  //     ajax: {
+  //       url: castSelect.dataset.ajaxUrl,
+  //       dataType: 'json',
+  //       delay:    250,
+  //       data:     params => ({ q: params.term }),
+  //       processResults: data => ({ results: data })
+  //     },
+  //     minimumInputLength: 2
+  //   });
+  // }
+
+//##################################################################
+  ['genre','studio','director'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && window.jQuery && jQuery.fn.select2) {
+      $(el).select2({
+        multiple:        true,
+        tags:            false,
+        tokenSeparators: [','],
+        placeholder:     id.charAt(0).toUpperCase() + id.slice(1),
+        ajax: {
+          url: el.dataset.ajaxUrl,
+          dataType: 'json',
+          delay:    250,
+          data:     params => ({ q: params.term }),
+          processResults: data => ({ results: data })
+        },
+        minimumInputLength: 2,
+        allowClear:         true
+      });
+    }
+  });    
+
+  ['producer','cast_member'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (sel && window.jQuery && jQuery.fn.select2) {
+      $(sel).select2({
+        tags: false,
+        multiple: true,
+        tokenSeparators: [','],
+        placeholder: id === 'producer'
+          ? 'Start typing to add/select…'
+          : 'Start typing to add/select…',
+        allowClear: true,
+        ajax: {
+          url: sel.dataset.ajaxUrl,
+          dataType: 'json',
+          delay: 250,
+          data: params => ({ q: params.term }),
+          processResults: data => ({ results: data })
+        },
+        minimumInputLength: 2
+      });
+    }
+  });  
+//##################################################################
 
   const yearSlider = document.getElementById('year-slider');
   if (yearSlider && typeof noUiSlider !== 'undefined') {
@@ -213,18 +259,5 @@ document.body.addEventListener('click', async e => {
     } else {
       btn.remove();
     }
-});
-
-//##################################################################
-$('#genres, #studios, #producers, #cast_members').select2({
-  tags: true,
-  tokenSeparators: [','],
-  placeholder: 'Start typing to add or select…'
-});
-
-$('#director').select2({
-  tags: true,
-  placeholder: 'Pick or create a director…',
-  allowClear: true
 });
   

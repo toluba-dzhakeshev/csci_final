@@ -102,26 +102,38 @@ def add_movie():
     if request.method == 'POST':
         from app import model
 
-        title       = request.form['title']
-        description = request.form['description']
-        avg_rating  = float(request.form['avg_rating'])
-        duration    = int(request.form['duration'])
-        poster_url  = request.form['poster_url']
-        page_url    = request.form['page_url']
+        title       = request.form.get('title','').strip()
+        description = request.form.get('description','').strip()
+        try:
+            avg_rating = float(request.form.get('avg_rating','') or 0)
+        except ValueError:
+            avg_rating = 0.0
+        try:
+            duration = int(request.form.get('duration','') or 0)
+        except ValueError:
+            duration = 0
+        poster_url = request.form.get('poster_url','').strip() or \
+            'https://as1.ftcdn.net/jpg/02/57/42/72/1000_F_257427286_Lp7c9XdPnvN46TyFKqUaZpPADJ77ZzUk.jpg'
+        page_url   = request.form.get('page_url','').strip() or None
 
-        year_val = int(request.form['year_value'])
-        year = Year.query.filter_by(year_value=year_val).first()
-        if not year:
-            year = Year(year_value=year_val)
-            db.session.add(year)
-            db.session.flush()
+        year_val = request.form.get('year_value','').strip()
+        year = None
+        if year_val.isdigit():
+            year_val = int(year_val)
+            year = Year.query.filter_by(year_value=year_val).first()
+            if not year:
+                year = Year(year_value=year_val)
+                db.session.add(year)
+                db.session.flush()
 
-        director_name = request.form['director']
-        director = Director.query.filter_by(director_name=director_name).first()
-        if not director:
-            director = Director(director_name=director_name)
-            db.session.add(director)
-            db.session.flush()
+        director_name = request.form.get('director','').strip()
+        director = None
+        if director_name:
+            director = Director.query.filter_by(director_name=director_name).first()
+            if not director:
+                director = Director(director_name=director_name)
+                db.session.add(director)
+                db.session.flush()
 
         emb = model.encode(description).tolist()
 
@@ -157,7 +169,6 @@ def add_movie():
         all_producers=all_producers,
         all_cast=all_cast
     )
-
 
 @admin_bp.route('/movies/<int:mid>/edit', methods=['GET', 'POST'])
 @login_required
