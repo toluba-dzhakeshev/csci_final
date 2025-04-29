@@ -4,6 +4,8 @@ from sqlalchemy.orm import relationship
 from sqlalchemy import func, Boolean, text
 from datetime import datetime
 from sqlalchemy.dialects.postgresql import JSONB
+from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy import JSON
 
 db = SQLAlchemy()
 
@@ -59,6 +61,12 @@ class User(UserMixin, db.Model):
     def is_active(self):
         return self.active
     ########################
+    
+    def set_password(self, pw):
+        self.password = generate_password_hash(pw)
+
+    def check_password(self, pw):
+        return check_password_hash(self.password, pw)
 
 class Movie(db.Model):
     __tablename__ = 'movies'
@@ -102,7 +110,7 @@ class Rating(db.Model):
 class Year(db.Model):
     __tablename__  = 'years'
     year_id        = db.Column(db.Integer, primary_key=True)
-    year_value     = db.Column(db.Integer, unique=True, nullable=False)
+    year_value     = db.Column(db.Integer, nullable=False)
     movies         = relationship('Movie', back_populates='year')
 
 class Genre(db.Model):
@@ -142,7 +150,7 @@ class ActivityLog(db.Model):
     id         = db.Column(db.Integer, primary_key=True)
     user_id    = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
     action     = db.Column(db.String(50),    nullable=False)
-    detail     = db.Column(JSONB,            nullable=True)
+    detail     = db.Column(JSON, nullable=True)
     created_at = db.Column(db.DateTime,      nullable=False, default=datetime.utcnow)
 
     user = db.relationship('User', backref=db.backref('activity_logs', lazy='dynamic'))

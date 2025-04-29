@@ -1,5 +1,5 @@
-from app import create_app
-from models import db, Movie
+from files.app import create_app
+from files.models import db, Movie
 
 app = create_app()
 with app.app_context():

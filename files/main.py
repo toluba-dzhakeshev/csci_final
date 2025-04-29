@@ -1,10 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_login import login_required, current_user
-from models import db, Movie, Favorite, Rating, Genre, Year, Studio, Director, Producer, CastMember, ActivityLog
+from files.models import db, Movie, Favorite, Rating, Genre, Year, Studio, Director, Producer, CastMember, ActivityLog
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from sqlalchemy import func
-from app import model, cache
+from files.app import model, cache
 import json
 
 main_bp = Blueprint('main', __name__, template_folder='templates')
@@ -34,7 +34,7 @@ def index():
 ######################################################################################################
 @cache.cached(timeout=60, query_string=True)
 @main_bp.route('/genre_search')
-@login_required
+# @login_required
 def genre_search():
     q = request.args.get('q','')
     matches = (Genre.query
@@ -46,7 +46,7 @@ def genre_search():
 
 @cache.cached(timeout=60, query_string=True)
 @main_bp.route('/studio_search')
-@login_required
+# @login_required
 def studio_search():
     q = request.args.get('q','')
     matches = (Studio.query
@@ -58,7 +58,7 @@ def studio_search():
 
 @cache.cached(timeout=60, query_string=True)
 @main_bp.route('/director_search')
-@login_required
+# @login_required
 def director_search():
     q = request.args.get('q','')
     matches = (Director.query
@@ -71,7 +71,7 @@ def director_search():
 
 @cache.cached(timeout=60, query_string=True)
 @main_bp.route('/producer_search')
-@login_required
+# @login_required
 def producer_search():
     q = request.args.get('q','')
     choices = Producer.query.filter(Producer.producer_name.ilike(f'%{q}%')) \
@@ -81,7 +81,7 @@ def producer_search():
 
 @cache.cached(timeout=60, query_string=True)
 @main_bp.route('/cast_search')
-@login_required
+# @login_required
 def cast_search():
     q = request.args.get('q', '')
     matches = (CastMember.query
@@ -126,8 +126,10 @@ def toggle_fav(mid):
     return redirect(next_page)
 
 @main_bp.route('/recommend', methods=['GET','POST'])
-@login_required
 def recommend():
+    # 1) safe user-ID for anonymous requests
+    uid = current_user.user_id if current_user.is_authenticated else None
+
     if request.method == 'POST':
         params = {
             'description': request.form['description'],
@@ -145,6 +147,7 @@ def recommend():
         }
         return redirect(url_for('main.recommend', **params))
 
+    # pull query-string params
     desc     = request.args.get('description','')
     genre    = request.args.get('genre') or None
     studio   = request.args.get('studio') or None
@@ -158,23 +161,26 @@ def recommend():
     offset   = int(request.args.get('offset', 0))
     limit    = int(request.args.get('limit', 5))
 
-    log_activity(
-        current_user.user_id,
-        'search',
-        detail={
-            'description': desc,
-            'genre': genre,
-            'studio': studio,
-            'director': director,
-            'producer': producer,
-            'cast_member': cast,
-            'year_from': yf,
-            'year_to': yt,
-            'rating_from': rf,
-            'rating_to': rt
-        }
-    )
+    # 2) only log if we have a real user
+    if uid is not None:
+        log_activity(
+            uid,
+            'search',
+            detail={
+                'description': desc,
+                'genre': genre,
+                'studio': studio,
+                'director': director,
+                'producer': producer,
+                'cast_member': cast,
+                'year_from': yf,
+                'year_to': yt,
+                'rating_from': rf,
+                'rating_to': rt
+            }
+        )
 
+    # build the base query…
     q = Movie.query
     if genre:    q = q.join(Movie.genres).filter(Genre.genre_id   == int(genre))
     if studio:   q = q.join(Movie.studios).filter(Studio.studio_id  == int(studio))
@@ -186,7 +192,8 @@ def recommend():
     if rf:       q = q.filter(Movie.avg_rating         >= float(rf))
     if rt:       q = q.filter(Movie.avg_rating         <= float(rt))
     candidates = q.all()
-    
+
+    # 3a) “no description” branch
     if not desc:
         all_movies = q.order_by(Movie.title).all()
         page       = all_movies[offset:offset+limit]
@@ -206,7 +213,8 @@ def recommend():
             'cast':        [c.cast_name for c in m.cast_members],
             'duration':    m.duration,
             'page_url':    m.page_url,
-            'faved':       Favorite.query.get((current_user.user_id, m.movie_id)) is not None,
+            # use uid instead of current_user
+            'faved':       Favorite.query.get((uid, m.movie_id)) is not None,
             'avg_rating':  m.avg_rating,
         } for m in page]
 
@@ -223,13 +231,15 @@ def recommend():
             has_more=has_more
         )
 
+    # 3b) “with description” branch
     emb_q = model.encode(desc)
     if getattr(emb_q, "ndim", None) == 2:
         emb_q = emb_q.squeeze(0)
 
     results = []
     for m in candidates:
-        if not Favorite.query.get((current_user.user_id, m.movie_id)):
+        # skip already-fav’d by uid (None→always False)
+        if not Favorite.query.get((uid, m.movie_id)):
             try:
                 vals = json.loads(m.embeddings)
             except json.JSONDecodeError:
@@ -241,7 +251,6 @@ def recommend():
             results.append((sim, m))
 
     results.sort(key=lambda x: x[0], reverse=True)
-
     page     = results[offset:offset+limit]
     has_more = len(results) > offset + limit
 
@@ -260,7 +269,7 @@ def recommend():
             'cast':        [c.cast_name for c in m.cast_members],
             'duration':    m.duration,
             'page_url':    m.page_url,
-            'faved':       Favorite.query.get((current_user.user_id, m.movie_id)) is not None,
+            'faved':       Favorite.query.get((uid, m.movie_id)) is not None,
             'avg_rating':  m.avg_rating,
         } for sim,m in page]
         return jsonify({
