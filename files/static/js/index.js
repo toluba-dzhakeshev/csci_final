@@ -56,39 +56,6 @@ document.body.addEventListener('change', async e => {
 });
 
 window.addEventListener('DOMContentLoaded', () => {
-  // const producerSelect = document.getElementById('producer');
-  // if (producerSelect && window.jQuery && jQuery.fn.select2) {
-  //   $(producerSelect).select2({
-  //     placeholder: 'Any Producer',
-  //     allowClear:  true,
-  //     ajax: {
-  //       url: producerSelect.dataset.ajaxUrl,
-  //       dataType: 'json',
-  //       delay:    250,
-  //       data:     params => ({ q: params.term }),
-  //       processResults: data => ({ results: data })
-  //     },
-  //     minimumInputLength: 2
-  //   });
-  // }
-
-  // const castSelect = document.getElementById('cast_member');
-  // if (castSelect && window.jQuery && jQuery.fn.select2) {
-  //   $(castSelect).select2({
-  //     placeholder: 'Any Cast Member',
-  //     allowClear:  true,
-  //     ajax: {
-  //       url: castSelect.dataset.ajaxUrl,
-  //       dataType: 'json',
-  //       delay:    250,
-  //       data:     params => ({ q: params.term }),
-  //       processResults: data => ({ results: data })
-  //     },
-  //     minimumInputLength: 2
-  //   });
-  // }
-
-//##################################################################
   ['genre','studio','director'].forEach(id => {
     const el = document.getElementById(id);
     if (el && window.jQuery && jQuery.fn.select2) {
@@ -132,7 +99,6 @@ window.addEventListener('DOMContentLoaded', () => {
       });
     }
   });  
-//##################################################################
 
   const yearSlider = document.getElementById('year-slider');
   if (yearSlider && typeof noUiSlider !== 'undefined') {

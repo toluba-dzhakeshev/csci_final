@@ -31,10 +31,8 @@ def index():
         max_rating=max_rating
     )
 
-######################################################################################################
 @cache.cached(timeout=60, query_string=True)
 @main_bp.route('/genre_search')
-# @login_required
 def genre_search():
     q = request.args.get('q','')
     matches = (Genre.query
@@ -46,7 +44,6 @@ def genre_search():
 
 @cache.cached(timeout=60, query_string=True)
 @main_bp.route('/studio_search')
-# @login_required
 def studio_search():
     q = request.args.get('q','')
     matches = (Studio.query
@@ -58,7 +55,6 @@ def studio_search():
 
 @cache.cached(timeout=60, query_string=True)
 @main_bp.route('/director_search')
-# @login_required
 def director_search():
     q = request.args.get('q','')
     matches = (Director.query
@@ -67,11 +63,9 @@ def director_search():
                .limit(20)
                .all())
     return jsonify([{"id": d.director_id, "text": d.director_name} for d in matches])
-######################################################################################################
 
 @cache.cached(timeout=60, query_string=True)
 @main_bp.route('/producer_search')
-# @login_required
 def producer_search():
     q = request.args.get('q','')
     choices = Producer.query.filter(Producer.producer_name.ilike(f'%{q}%')) \
@@ -81,7 +75,6 @@ def producer_search():
 
 @cache.cached(timeout=60, query_string=True)
 @main_bp.route('/cast_search')
-# @login_required
 def cast_search():
     q = request.args.get('q', '')
     matches = (CastMember.query
@@ -111,13 +104,12 @@ def toggle_fav(mid):
         now_fav = True
 
     db.session.commit()
-    ###################################################
+
     log_activity(
         current_user.user_id,
         'toggle_fav',
         detail={'movie_id': mid, 'faved': now_fav}
     )
-    ###################################################
 
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return ('', 204)
@@ -127,7 +119,6 @@ def toggle_fav(mid):
 
 @main_bp.route('/recommend', methods=['GET','POST'])
 def recommend():
-    # 1) safe user-ID for anonymous requests
     uid = current_user.user_id if current_user.is_authenticated else None
 
     if request.method == 'POST':
@@ -147,7 +138,6 @@ def recommend():
         }
         return redirect(url_for('main.recommend', **params))
 
-    # pull query-string params
     desc     = request.args.get('description','')
     genre    = request.args.get('genre') or None
     studio   = request.args.get('studio') or None
@@ -161,7 +151,6 @@ def recommend():
     offset   = int(request.args.get('offset', 0))
     limit    = int(request.args.get('limit', 5))
 
-    # 2) only log if we have a real user
     if uid is not None:
         log_activity(
             uid,
@@ -180,7 +169,6 @@ def recommend():
             }
         )
 
-    # build the base query…
     q = Movie.query
     if genre:    q = q.join(Movie.genres).filter(Genre.genre_id   == int(genre))
     if studio:   q = q.join(Movie.studios).filter(Studio.studio_id  == int(studio))
@@ -193,7 +181,6 @@ def recommend():
     if rt:       q = q.filter(Movie.avg_rating         <= float(rt))
     candidates = q.all()
 
-    # 3a) “no description” branch
     if not desc:
         all_movies = q.order_by(Movie.title).all()
         page       = all_movies[offset:offset+limit]
@@ -213,7 +200,6 @@ def recommend():
             'cast':        [c.cast_name for c in m.cast_members],
             'duration':    m.duration,
             'page_url':    m.page_url,
-            # use uid instead of current_user
             'faved':       Favorite.query.get((uid, m.movie_id)) is not None,
             'avg_rating':  m.avg_rating,
         } for m in page]
@@ -231,14 +217,12 @@ def recommend():
             has_more=has_more
         )
 
-    # 3b) “with description” branch
     emb_q = model.encode(desc)
     if getattr(emb_q, "ndim", None) == 2:
         emb_q = emb_q.squeeze(0)
 
     results = []
     for m in candidates:
-        # skip already-fav’d by uid (None→always False)
         if not Favorite.query.get((uid, m.movie_id)):
             try:
                 vals = json.loads(m.embeddings)
@@ -332,13 +316,12 @@ def rate_model():
         db.session.add(rec)
 
     db.session.commit()
-    ###############################################
+
     log_activity(
     current_user.user_id,
         'rate_model',
         detail={'movie_id': movie_id, 'score': score}
     )
-    ###############################################
     
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return ('', 204)
@@ -346,7 +329,6 @@ def rate_model():
     flash(f'You rated the model {score}/10 on "{Movie.query.get(movie_id).title}"')
     return redirect(request.referrer or url_for('main.recommend'))
 
-###############################################
 def log_activity(user_id, action, detail=None):
     entry = ActivityLog(user_id=user_id, action=action, detail=detail)
     db.session.add(entry)

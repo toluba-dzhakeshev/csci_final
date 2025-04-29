@@ -66,8 +66,6 @@ def list_movies():
       more=more
     )
 
-##################################################################
-
 def _upsert_list(field_name, cls, rel, parent_obj):
     raw   = request.form.get(field_name, '')
     names = [n.strip() for n in raw.split(',') if n.strip()]
@@ -229,8 +227,6 @@ def edit_movie(mid):
         all_producers=all_producers,
         all_cast=all_cast
     )
-    
-##################################################################
 
 @admin_bp.route('/stats')
 @login_required

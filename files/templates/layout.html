@@ -42,7 +42,6 @@
       {% if current_user.is_authenticated %}
         <span>Hi, {{ current_user.email }}</span>
         <a href="{{ url_for('main.favorites') }}" class="hover:underline">Favorites</a>
-      <!-- ################################################################### -->
         {% if current_user.is_admin %}
           <div class="inline-flex space-x-4">
             <a href="{{ url_for('admin.list_users') }}" class="hover:underline">
@@ -59,7 +58,6 @@
             </a>
           </div>
         {% endif %}
-      <!-- ################################################################### -->
         <a href="{{ url_for('auth.logout') }}" class="hover:underline">Logout</a>
       {% else %}
         <a href="{{ url_for('auth.login') }}" class="hover:underline">Login</a>

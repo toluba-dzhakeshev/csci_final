@@ -41,14 +41,12 @@ class User(UserMixin, db.Model):
     is_admin   = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, server_default=func.now())
     
-    ########################
     active     = db.Column(
         db.Boolean,
         nullable=False,
         default=True,
         server_default=text('TRUE')
     )
-    ########################
 
     favorites = db.relationship('Movie', secondary='favorites', back_populates='favorited_by')
     ratings   = db.relationship('Rating', back_populates='user')
@@ -56,11 +54,9 @@ class User(UserMixin, db.Model):
     def get_id(self):
         return str(self.user_id)
     
-    ########################
     @property
     def is_active(self):
         return self.active
-    ########################
     
     def set_password(self, pw):
         self.password = generate_password_hash(pw)
@@ -143,7 +139,6 @@ class CastMember(db.Model):
     cast_name       = db.Column(db.String, unique=True, nullable=False)
     movies          = relationship('Movie', secondary='movie_cast', back_populates='cast_members')
     
-###########################################################
 class ActivityLog(db.Model):
     __tablename__ = 'activity_log'
 

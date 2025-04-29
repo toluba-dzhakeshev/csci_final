@@ -15,8 +15,6 @@
     content: '★'; color: gold;
   }
 
-/* ──────────────────────────────────────────────────────────────────────────────────────────────────────── */
-
 .noUi-target.noUi-horizontal {
   margin: 2rem 0 !important;
   position: relative;
@@ -95,8 +93,6 @@ html.dark .noUi-tooltip {
   display: none !important;
 }
 
-/* ──────────────────────────────────────────────────────────────────────────────────────────────────────── */
-
 h2.slider‐title,
 h3.slider‐title,
 label.slider‐title {
@@ -113,8 +109,6 @@ input[type="submit"] {
   display: block;
   margin-top: 2rem !important;
 }
-
-/* ──────────────────────────────────────────────────────────────────────────────────────────────────────── */
 
 .dark .select2-container--default .select2-selection--single {
   background-color: #2d3748;
@@ -137,8 +131,6 @@ input[type="submit"] {
   background-color: #4a5568;
   color:            #edf2f7;
 }
-
-/* ──────────────────────────────────────────────────────────────────────────────────────────────────────── */
 
 .dark .select2-container--default .select2-selection--single {
   background-color: #2d3748;
@@ -179,8 +171,6 @@ input[type="submit"] {
   background-color: #4a5568;
   color:            #edf2f7;
 }
-
-/* ──────────────────────────────────────────────────────────────────────────────────────────────────────── */
 
 .select2-container--default .select2-selection--multiple {
   background-color: white;
