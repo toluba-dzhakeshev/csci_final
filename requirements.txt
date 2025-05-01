@@ -23,6 +23,7 @@ Flask-WTF==1.2.2
 fsspec==2025.2.0
 gitdb==4.0.12
 GitPython==3.1.44
+gunicorn==23.0.0
 h11==0.14.0
 huggingface-hub==0.29.1
 idna==3.10
