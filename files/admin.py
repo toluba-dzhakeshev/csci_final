@@ -247,7 +247,7 @@ def stats():
           func.avg(cast(ActivityLog.detail['score'], Integer))
               .label('avg_score')
       )
-      .join(ActivityLog, ActivityLog.detail['movie_id'].astext.cast(Integer) == Movie.movie_id)
+      .join(ActivityLog, cast(ActivityLog.detail['movie_id'], Integer) == Movie.movie_id)
       .filter(ActivityLog.action=='rate_model')
       .group_by(Movie.title)
       .order_by(func.avg(cast(ActivityLog.detail['score'], Integer)).desc())
