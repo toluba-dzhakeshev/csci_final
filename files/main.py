@@ -6,6 +6,7 @@ from sentence_transformers import SentenceTransformer
 from sqlalchemy import func
 from files.app import model, cache
 import json
+import re
 
 main_bp = Blueprint('main', __name__, template_folder='templates')
 
@@ -122,6 +123,12 @@ def recommend():
     uid = current_user.user_id if current_user.is_authenticated else None
 
     if request.method == 'POST':
+        
+        desc = request.form.get('description','').strip()
+        if desc and not re.match(r'^[\x00-\x7F]+$', desc):
+            flash('Please enter only English text in the description.', 'error')
+            return redirect(request.url)
+        
         params = {
             'description': request.form['description'],
             'genre':       request.form.get('genres',''),
