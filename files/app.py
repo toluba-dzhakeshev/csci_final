@@ -31,7 +31,7 @@ def create_app(test_config: dict | None = None):
     cache.init_app(app)
     
     app.config.from_mapping(
-        SECRET_KEY='your-secret-key',        
+        SECRET_KEY='ec1cdd0ea5f383a54dbc41dd6c4371a3b29fe1b9e2f5386a0dd6fb4c5490746a',        
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         SERVER_NAME='localhost', 
     )
