@@ -1,12 +1,16 @@
 {% extends 'layout.html' %}
 
 {% block content %}
+  <!-- Main container for statistics -->
   <div class="container mx-auto p-6">
     <h1 class="text-3xl font-bold mb-6">Usage Statistics</h1>
 
+    <!-- Grid layout: two columns for each stats section -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+       <!-- Section: Top 10 Most-Favorited Movies -->
       <section>
         <h2 class="text-2xl font-semibold mb-4">Top 10 Most-Favorited Movies</h2>
+        <!-- Table listing movie titles and their favorite counts -->
         <table class="min-w-full bg-white dark:bg-gray-800 table-auto rounded-lg shadow">
           <thead>
             <tr class="bg-gray-200 dark:bg-gray-700">
@@ -16,6 +20,7 @@
           </thead>
           <tbody>
             {% for title, cnt in fav_counts %}
+              <!-- Each row: movie title and favorite count -->
               <tr class="border-t border-gray-200 dark:border-gray-700">
                 <td class="px-4 py-2">{{ title }}</td>
                 <td class="px-4 py-2 text-center">{{ cnt }}</td>
@@ -25,10 +30,13 @@
         </table>
       </section>
 
+      <!-- Section: Top 10 Movies by Model Performance -->
       <section>
         <h2 class="text-2xl font-semibold mb-4">Top 10 Movies by Model Performance</h2>
+        <!-- Table listing movie titles and their average model scores -->
         <table class="min-w-full bg-white dark:bg-gray-800 table-auto rounded-lg shadow">
           <thead>
+            <!-- Each row: movie title and formatted average score -->
             <tr class="bg-gray-200 dark:bg-gray-700">
               <th class="px-4 py-2 text-left">Movie Title</th>
               <th class="px-4 py-2 text-center">Average Score</th>

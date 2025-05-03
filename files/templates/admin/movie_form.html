@@ -1,15 +1,18 @@
+{# Extends the base layout to include global header, footer, and dark-mode toggling #}
 {% extends 'layout.html' %}
 
 {% block content %}
 <div class="max-w-3xl mx-auto p-6 bg-white dark:bg-gray-800 rounded shadow">
+  {# Heading changes based on whether we're editing an existing movie or creating a new one #}
   <h1 class="text-2xl font-bold mb-4">
     {{ movie and 'Edit' or 'New' }} Movie
   </h1>
 
+  {# Main form: posts back to this same route, CSRF token included #}
   <form action="" method="post" class="space-y-6">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-    <!-- TITLE -->
+    <!-- TITLE FIELD: required text input for the movie title -->
     <div>
       <label for="title" class="block font-medium">Title</label>
       <input
@@ -19,7 +22,7 @@
       >
     </div>
 
-    <!-- DESCRIPTION -->
+    <!-- DESCRIPTION FIELD: multi-line textarea for plot summary or description -->
     <div>
       <label for="description" class="block font-medium">Description</label>
       <textarea
@@ -28,7 +31,7 @@
       >{{ movie and movie.description or '' }}</textarea>
     </div>
 
-    <!-- AVG RATING -->
+    <!-- NUMERIC FIELDS: Avg. Rating and Duration -->
     <div>
       <label for="avg_rating" class="block font-medium">Avg. Rating</label>
       <input
@@ -37,8 +40,6 @@
         value="{{ movie and movie.avg_rating or '' }}"
       >
     </div>
-
-    <!-- DURATION -->
     <div>
       <label for="duration" class="block font-medium">Duration (min)</label>
       <input
@@ -48,7 +49,7 @@
       >
     </div>
 
-    <!-- POSTER & PAGE URLS -->
+    <!-- URL FIELDS: Poster image and external page link -->
     <div>
       <label for="poster_url" class="block font-medium">Poster URL</label>
       <input
@@ -66,7 +67,7 @@
       >
     </div>
 
-    <!-- YEAR -->
+     <!-- YEAR FIELD: numeric input for release year -->
     <div>
       <label for="year_value" class="block font-medium">Year</label>
       <input
@@ -76,7 +77,7 @@
       >
     </div>
 
-    <!-- DIRECTOR -->
+    <!-- DIRECTOR FIELD: free-text director name (upserts in backend) -->
     <div>
       <label for="director" class="block font-medium">Director</label>
       <input
@@ -87,7 +88,7 @@
       >
     </div>
 
-    <!-- GENRES -->
+    <!-- MULTI-VALUE TEXT FIELDS: comma-separated lists (upsert in backend) -->
     <div>
       <label for="genres" class="block font-medium">Genres</label>
       <input
@@ -97,8 +98,6 @@
         value="{% if movie %}{{ movie.genres|map(attribute='genre_name')|join(', ') }}{% endif %}"
       >
     </div>
-
-    <!-- STUDIOS -->
     <div>
       <label for="studios" class="block font-medium">Studios</label>
       <input
@@ -108,8 +107,6 @@
         value="{% if movie %}{{ movie.studios|map(attribute='studio_name')|join(', ') }}{% endif %}"
       >
     </div>
-
-    <!-- PRODUCERS -->
     <div>
       <label for="producers" class="block font-medium">Producers</label>
       <input
@@ -119,8 +116,6 @@
         value="{% if movie %}{{ movie.producers|map(attribute='producer_name')|join(', ') }}{% endif %}"
       >
     </div>
-
-    <!-- CAST MEMBERS -->
     <div>
       <label for="cast_members" class="block font-medium">Cast Members</label>
       <input
@@ -131,7 +126,7 @@
       >
     </div>
 
-    <!-- EMBEDDINGS JSON -->
+    <!-- EMBEDDINGS: raw JSON -->
     <div>
       <label for="embeddings" class="block font-medium">Embeddings (JSON array)</label>
       <textarea
@@ -140,7 +135,7 @@
       >{{ movie and movie.embeddings or '' }}</textarea>
     </div>
 
-    <!-- SUBMIT + CANCEL -->
+    <!-- Actions: submit button and cancel link -->
     <div class="flex items-center space-x-4">
       <button
         type="submit"
@@ -158,5 +153,5 @@
 {% endblock %}
 
 {% block scripts %}
-
+{# Placeholder #}
 {% endblock %}

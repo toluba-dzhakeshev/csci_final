@@ -1,11 +1,12 @@
+{# Template for the main search page #}
 {% extends 'layout.html' %}
 
 {% block content %}
   <h1 class="text-3xl font-semibold mb-6">Find Your Next Movie</h1>
-
+  {# Search form posts to the recommend endpoint #}
   <form action="{{ url_for('main.recommend') }}" method="POST">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-
+    {# Movie description input #}
     <div>
       <label for="query" class="block mb-2 font-medium">Movie Description</label>
       <input
@@ -24,7 +25,7 @@
         "
       >
     </div>
-
+    {# Genre, Studio, Director multi‐select filters #}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
       <!-- GENRE -->
       <div>
@@ -43,7 +44,7 @@
           style="width: 100%"
         ></select>
       </div>
-
+      <!-- STUDIO -->
       <div>
         <label class="block mb-1">Studios</label>
         <select
@@ -60,7 +61,7 @@
           "
         ></select>
       </div>
-
+      <!-- DIRECTOR -->
       <div>
         <label class="block mb-1">Directors</label>
         <select
@@ -78,7 +79,7 @@
         ></select>
       </div>
     </div>
-
+    {# Producer and Cast Member AJAX‐powered autocomplete selects #}
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
       <div>
         <label class="block mb-1">Producer</label>
@@ -118,22 +119,22 @@
         </select>
       </div>
     </div>
-
+    {# Year slider filter #}
     <div class="slider-wrapper my-6">
       <label class="block font-medium">Movie Year</label>
       <div id="year-slider" class="w-full"></div>
       <input type="hidden" name="year_from" id="year_from" value="{{ min_year }}">
       <input type="hidden" name="year_to"   id="year_to"   value="{{ max_year }}">
     </div>
-
+    {# Rating slider filter #}
     <div class="slider-wrapper my-6">
       <label class="block font-medium">Movie Rating</label>
       <div id="rating-slider" class="w-full"></div>
       <input type="hidden" name="rating_from" id="rating_from" value="{{ min_rating }}">
       <input type="hidden" name="rating_to"   id="rating_to"   value="{{ max_rating }}">
     </div>
-
-    <div>
+    {# Submit button #}
+    <div> 
       <button
         type="submit"
         class="

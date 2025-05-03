@@ -1,7 +1,26 @@
+/**
+ * index.js
+ *
+ * Handles client-side interactions for the MovieRecApp:
+ * - CSRF token retrieval
+ * - AJAX toggling of favorites
+ * - Auto-submit of model ratings
+ * - Expand/collapse movie details
+ * - Initialization of Select2 for multi- and single-select filters
+ * - Setup of noUiSlider for year and rating range filters
+ * - AJAX "Load More" pagination for recommendations
+ */
+
+// Retrieve CSRF token from meta tag for secure AJAX requests
 const csrfToken = document
   .querySelector('meta[name="csrf-token"]')
   .getAttribute('content');
 
+/**
+ * toggleFavorite
+ * Send an AJAX POST to toggle favorite status for a given movie.
+ * Updates button text and data attribute on success.
+ */
 async function toggleFavorite(btn) {
   const mid   = btn.dataset.mid;
   const faved = btn.dataset.faved === '1';
@@ -16,6 +35,7 @@ async function toggleFavorite(btn) {
   });
 
   if (resp.status === 204) {
+    // Flip button label and state
     btn.textContent        = faved ? 'Add Favorite'    : 'Remove Favorite';
     btn.dataset.faved      = faved ? '0'                : '1';
   } else {
@@ -23,12 +43,19 @@ async function toggleFavorite(btn) {
   }
 }
 
+/**
+ * toggleDetails
+ * Expand or collapse extra movie details panel.
+ */
 function toggleDetails(detailsId, btn) {
   const panel    = document.getElementById(detailsId);
   const isHidden = panel.classList.toggle('hidden');
   btn.textContent = isHidden ? 'More Info' : 'Less Info';
 }
 
+/**
+ * Auto-submit model-rating form when a star is selected.
+ */
 document.body.addEventListener('change', async e => {
   const input = e.target;
 
@@ -55,7 +82,11 @@ document.body.addEventListener('change', async e => {
   }
 });
 
+/**
+ * Initialize Select2, sliders, and load-more button handlers once DOM is ready.
+ */
 window.addEventListener('DOMContentLoaded', () => {
+  // Multi-select AJAX-powered filters for genre, studio, director
   ['genre','studio','director'].forEach(id => {
     const el = document.getElementById(id);
     if (el && window.jQuery && jQuery.fn.select2) {
@@ -77,6 +108,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });    
 
+  // Multi-select AJAX-powered filters for producer and cast member
   ['producer','cast_member'].forEach(id => {
     const sel = document.getElementById(id);
     if (sel && window.jQuery && jQuery.fn.select2) {
@@ -100,6 +132,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });  
 
+  // Year range slider setup using noUiSlider
   const yearSlider = document.getElementById('year-slider');
   if (yearSlider && typeof noUiSlider !== 'undefined') {
     const fromInput = document.getElementById('year_from');
@@ -120,6 +153,7 @@ window.addEventListener('DOMContentLoaded', () => {
     })
   }
 
+  // Rating range slider setup
   const ratingSlider = document.getElementById('rating-slider');
   if (ratingSlider && typeof noUiSlider !== 'undefined') {
     const fromInput = document.getElementById('rating_from');
@@ -141,6 +175,9 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+/**
+ * Handle "Load More" button for AJAX pagination of recommendations.
+ */
 document.body.addEventListener('click', async e => {
     const btn = e.target.closest('#load-more');
     if (!btn) return;
@@ -158,6 +195,7 @@ document.body.addEventListener('click', async e => {
     const { movies, next_offset, has_more } = await resp.json();
     const container = document.getElementById('rec-container');
   
+    // Append each new movie block to container
     movies.forEach(m => {
       const html = `
         <div class="flex bg-gray-100 dark:bg-gray-800 rounded shadow overflow-hidden mb-6">

@@ -8,11 +8,17 @@ from files.app import model, cache
 import json
 import re
 
+# Blueprint for main user-facing routes
 main_bp = Blueprint('main', __name__, template_folder='templates')
 
 @cache.cached(timeout=300)
 @main_bp.route('/', methods=['GET'])
 def index():
+    """
+    Render the home page with filter options:
+    - genres, studios, directors for dropdowns
+    - min/max bounds for year and rating sliders
+    """
     genres    = Genre.query.order_by(Genre.genre_name).all()
     studios   = Studio.query.order_by(Studio.studio_name).all()
     directors = Director.query.order_by(Director.director_name).all()
@@ -32,9 +38,11 @@ def index():
         max_rating=max_rating
     )
 
+# AJAX endpoints for live search in Select2 widgets
 @cache.cached(timeout=60, query_string=True)
 @main_bp.route('/genre_search')
 def genre_search():
+    # Return JSON list of {id, text} matching the q parameter for genres.
     q = request.args.get('q','')
     matches = (Genre.query
                .filter(Genre.genre_name.ilike(f'%{q}%'))
@@ -46,6 +54,7 @@ def genre_search():
 @cache.cached(timeout=60, query_string=True)
 @main_bp.route('/studio_search')
 def studio_search():
+    # Return JSON list of {id, text} matching the q parameter for studios.
     q = request.args.get('q','')
     matches = (Studio.query
                .filter(Studio.studio_name.ilike(f'%{q}%'))
@@ -57,6 +66,7 @@ def studio_search():
 @cache.cached(timeout=60, query_string=True)
 @main_bp.route('/director_search')
 def director_search():
+    # Return JSON list of {id, text} matching the q parameter for directors.
     q = request.args.get('q','')
     matches = (Director.query
                .filter(Director.director_name.ilike(f'%{q}%'))
@@ -68,6 +78,7 @@ def director_search():
 @cache.cached(timeout=60, query_string=True)
 @main_bp.route('/producer_search')
 def producer_search():
+    # Return JSON list of {id, text} matching the q parameter for producers.
     q = request.args.get('q','')
     choices = Producer.query.filter(Producer.producer_name.ilike(f'%{q}%')) \
                             .order_by(Producer.producer_name) \
@@ -77,6 +88,7 @@ def producer_search():
 @cache.cached(timeout=60, query_string=True)
 @main_bp.route('/cast_search')
 def cast_search():
+    # Return JSON list of {id, text} matching the q parameter for cast members.
     q = request.args.get('q', '')
     matches = (CastMember.query
                .filter(CastMember.cast_name.ilike(f'%{q}%'))
@@ -88,12 +100,18 @@ def cast_search():
 @main_bp.route('/favorites')
 @login_required
 def favorites():
+    # Show the logged-in user’s favorite movies.
     favs = current_user.favorites
     return render_template('favorites.html', movies=favs)
 
 @main_bp.route('/favorite/<int:mid>', methods=['POST'])
 @login_required
 def toggle_fav(mid):
+    """
+    Toggle favorite status for a given movie:
+    - AJAX: return 204 No Content.
+    - Form post: flash a message and redirect back.
+    """
     fav = Favorite.query.get((current_user.user_id, mid))
     if fav:
         db.session.delete(fav)
@@ -120,15 +138,25 @@ def toggle_fav(mid):
 
 @main_bp.route('/recommend', methods=['GET','POST'])
 def recommend():
+    """
+    Handle movie recommendation flow:
+    - POST: validate English-only description, build query params, redirect to GET.
+    - GET:  apply filters, then:
+        If no description: simple title-ordered list + pagination.
+        Else: encode description, compute cosine similarity, sort + paginate.
+    Responds with JSON on AJAX “More” calls, HTML otherwise.
+    """
     uid = current_user.user_id if current_user.is_authenticated else None
 
     if request.method == 'POST':
         
+        # English-only check
         desc = request.form.get('description','').strip()
         if desc and not re.match(r'^[\x00-\x7F]+$', desc):
             flash('Please enter only English text in the description.', 'error')
             return redirect(request.url)
         
+        # Redirect with all filter params
         params = {
             'description': request.form['description'],
             'genre':       request.form.get('genres',''),
@@ -145,6 +173,7 @@ def recommend():
         }
         return redirect(url_for('main.recommend', **params))
 
+    # Parse GET args
     desc     = request.args.get('description','')
     genre    = request.args.get('genre') or None
     studio   = request.args.get('studio') or None
@@ -158,6 +187,7 @@ def recommend():
     offset   = int(request.args.get('offset', 0))
     limit    = int(request.args.get('limit', 5))
 
+    # Log the search (if logged in)
     if uid is not None:
         log_activity(
             uid,
@@ -176,6 +206,7 @@ def recommend():
             }
         )
 
+    # Build base query with all filters
     q = Movie.query
     if genre:    q = q.join(Movie.genres).filter(Genre.genre_id   == int(genre))
     if studio:   q = q.join(Movie.studios).filter(Studio.studio_id  == int(studio))
@@ -188,6 +219,7 @@ def recommend():
     if rt:       q = q.filter(Movie.avg_rating         <= float(rt))
     candidates = q.all()
 
+    # Case: no description - simple paginate by title
     if not desc:
         all_movies = q.order_by(Movie.title).all()
         page       = all_movies[offset:offset+limit]
@@ -224,6 +256,7 @@ def recommend():
             has_more=has_more
         )
 
+    # Case: with description - compute embeddings + cosine similarity
     emb_q = model.encode(desc)
     if getattr(emb_q, "ndim", None) == 2:
         emb_q = emb_q.squeeze(0)
@@ -241,6 +274,7 @@ def recommend():
             sim = arr.dot(emb_q) / (np.linalg.norm(arr) * np.linalg.norm(emb_q))
             results.append((sim, m))
 
+    # Sort by similarity and paginate
     results.sort(key=lambda x: x[0], reverse=True)
     page     = results[offset:offset+limit]
     has_more = len(results) > offset + limit
@@ -279,6 +313,7 @@ def recommend():
 @main_bp.route('/results')
 @login_required
 def results():
+    # Legacy /results route: filters, computes similarity, and renders same template.
     query     = request.args.get('query','')
     genre     = request.args.get('genre','')
     ymn, ymx  = request.args.get('year_from'), request.args.get('year_to')
@@ -308,6 +343,7 @@ def results():
 @main_bp.route('/rate_model', methods=['POST'])
 @login_required
 def rate_model():
+    # Upsert user’s rating of the recommendation model.
     movie_id = int(request.form['movie_id'])
     score    = int(request.form['model_rating'])
 
@@ -337,6 +373,7 @@ def rate_model():
     return redirect(request.referrer or url_for('main.recommend'))
 
 def log_activity(user_id, action, detail=None):
+    # Record a user action in the ActivityLog table.
     entry = ActivityLog(user_id=user_id, action=action, detail=detail)
     db.session.add(entry)
     db.session.commit()

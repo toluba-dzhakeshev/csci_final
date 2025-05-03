@@ -1,3 +1,4 @@
+# Draft file is created to test and check code
 from files.app import create_app
 from files.models import db, Movie
 

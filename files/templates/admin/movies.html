@@ -1,12 +1,14 @@
+{#Template: movies.html; Description: Displays a paginated list of all movies in the admin panel, with options to create, edit, and delete.#}
 {% extends 'layout.html' %}
 
 {% block content %}
+  {# Page heading and "New Movie" button #}
   <h1 class="text-2xl font-bold mb-4">All Movies</h1>
   <a href="{{ url_for('admin.add_movie') }}"
      class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded mb-4 inline-block">
     + New Movie
   </a>
-
+  {# Responsive table wrapper with dark mode support #}
   <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow">
     <table class="min-w-full table-fixed divide-y divide-gray-200 dark:divide-gray-700">
       <thead class="bg-gray-50 dark:bg-gray-700">
@@ -26,6 +28,7 @@
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
+        {# Loop through each movie and render a row #}
         {% for m in movies %}
         <tr>
           <td class="px-6 py-4 whitespace-nowrap">{{ m.title }}</td>
@@ -33,7 +36,7 @@
           <td class="px-6 py-4 whitespace-nowrap">{{ m.director.director_name }}</td>
           <td class="px-6 py-4 align-middle whitespace-nowrap text-right">
             <div class="inline-flex items-center space-x-4">
-              <!-- EDIT -->
+              {# Edit link #}
               <a
                 href="{{ url_for('admin.edit_movie', mid=m.movie_id) }}"
                 class="text-blue-500 hover:text-blue-700 leading-none align-middle"
@@ -41,7 +44,7 @@
                 Edit
               </a>
           
-              <!-- DELETE -->
+              {# Delete form with confirmation prompt #}
               <form
                 action="{{ url_for('admin.delete_movie', mid=m.movie_id) }}"
                 method="post"
@@ -64,6 +67,7 @@
     </table>
   </div>
 
+  {# Pagination: "More" button if more pages exist #}
   {% if more %}
   <div class="mt-4 text-center">
     <a href="{{ url_for('admin.list_movies', page=page+1) }}"

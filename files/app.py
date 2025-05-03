@@ -9,36 +9,44 @@ from files.admin import admin_bp
 import os
 from dotenv import load_dotenv
 
+# Protect against CSRF attacks on form submissions
 csrf = CSRFProtect()
 
+# Simple in-memory cache for improving performance
 cache = Cache(config={
     'CACHE_TYPE': 'simple',
     'CACHE_DEFAULT_TIMEOUT': 300
 })
 
+# Flask-Login manager setup
 login_manager = LoginManager()
-login_manager.login_view = 'auth.login'
+login_manager.login_view = 'auth.login' # Redirect here if not authenticated
 
 @login_manager.user_loader
 def load_user(user_id):
+    # Given a user ID, return the corresponding User object. Required by Flask-Login.
     return User.query.get(int(user_id))
 
 def create_app(test_config: dict | None = None):
+    # Application factory: sets up Flask app, configures extensions, and registers blueprints.
     app = Flask(__name__)
     
+    # Initialize CSRF protection and caching
     csrf.init_app(app)
-
     cache.init_app(app)
     
+    # Base configuration
     app.config.from_mapping(
         SECRET_KEY='ec1cdd0ea5f383a54dbc41dd6c4371a3b29fe1b9e2f5386a0dd6fb4c5490746a',        
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
-        SERVER_NAME='localhost', 
+        SERVER_NAME='localhost', # Required for url_for in tests
     )
     
+    # Override configuration during testing if provided
     if test_config is not None:
         app.config.update(test_config)
     
+    # Select database URI: in-memory for tests, otherwise PostgreSQL
     if app.config.get('TESTING'):
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
     else:
@@ -53,9 +61,11 @@ def create_app(test_config: dict | None = None):
             "&sslrootcert=./do_ca.crt"
         )
 
+    # Initialize database and login manager with the app
     db.init_app(app)
     login_manager.init_app(app)
 
+    # Register application blueprints
     from files.auth import auth_bp
     from files.main import main_bp
     from files.admin import admin_bp
@@ -65,9 +75,11 @@ def create_app(test_config: dict | None = None):
 
     return app
 
+# Load the sentence-transformer model once for reuse
 model = SentenceTransformer('all-MiniLM-L6-v2')
 
 if __name__ == '__main__':
+    # When run directly, create the app and start the dev server
     app = create_app()
     app.run(debug=True, port=5005)
     

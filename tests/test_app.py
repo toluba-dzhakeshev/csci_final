@@ -8,7 +8,9 @@ from files.models import (
 )
 import numpy as np
 
+# Test Fixtures
 @pytest.fixture
+# Application fixture: sets up Flask app with in-memory DB for each test
 def app():
     test_cfg = {
         'TESTING': True,
@@ -18,22 +20,25 @@ def app():
     app = create_app(test_cfg)
     
     with app.app_context():
-        db.create_all()
-        yield app
-        db.session.remove()
-        db.drop_all()
+        db.create_all() # create all tables
+        yield app # provide app to tests
+        db.session.remove() # teardown
+        db.drop_all() # drop all tables
 
 @pytest.fixture
 def client(app):
+    # HTTP test client for sending requests
     return app.test_client()
 
-#Unit tests for models CRUD and embedding parsing
+# Unit Tests: Models CRUD & Embeddings Parsing
 def test_movie_crud_and_embedding(app):
+    # Create supporting Year and Director
     y = Year(year_value=2020)
     d = Director(director_name='DirTest')
     db.session.add_all([y, d])
     db.session.commit()
 
+    # Add a Movie with JSON embeddings
     emb = [0.1, 0.2, 0.3]
     m = Movie(
         title='TestMovie',
@@ -49,6 +54,7 @@ def test_movie_crud_and_embedding(app):
     db.session.add(m)
     db.session.commit()
 
+    # Verify retrieval and embedding parsing
     fetched = Movie.query.filter_by(title='TestMovie').first()
     assert fetched is not None
     assert fetched.avg_rating == 7.5
@@ -56,6 +62,7 @@ def test_movie_crud_and_embedding(app):
     parsed = json.loads(fetched.embeddings)
     assert parsed == emb
 
+    # Test update and deletion
     fetched.title = 'NewTitle'
     db.session.commit()
     assert Movie.query.filter_by(title='NewTitle').one() is not None
@@ -64,14 +71,15 @@ def test_movie_crud_and_embedding(app):
     db.session.commit()
     assert Movie.query.count() == 0
 
-#Integration tests for endpoints
+# Integration Tests: Endpoints
 def test_index_page(client):
+    # Home page should load and contain heading text
     rv = client.get(url_for('main.index'))
     assert rv.status_code == 200
     assert b'Find Your Next Movie' in rv.data
 
 def test_genre_search_endpoint(client, app):
-
+    # Populate a Genre and test AJAX search
     with app.app_context():
         g = Genre(genre_name='Comedy')
         db.session.add(g)
@@ -82,6 +90,7 @@ def test_genre_search_endpoint(client, app):
     assert isinstance(data, list)
     assert data and data[0]['text'] == 'Comedy'
 
+# Recommendation with empty description should list movies
 def test_recommend_empty_description(client, app):
     with app.app_context():
         y = Year(year_value=2021)
@@ -114,6 +123,7 @@ def test_recommend_empty_description(client, app):
     (False, False)
 ])
 def test_recommend_ajax_more(client, app, ajax, expected_json):
+    # Test pagination endpoint both AJAX and normal
     with app.app_context():
         y = Year(year_value=2022)
         d = Director(director_name='D2')
@@ -135,11 +145,12 @@ def test_recommend_ajax_more(client, app, ajax, expected_json):
     else:
         assert b'M1' in rv.data
 
-#Unit test for cosine‐sim step, including 1.0 identity
+# Unit Test: Cosine Similarity Function
 def cosine(a, b):
     return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))
 
 def test_similarity_identity_and_difference():
+    # Identity vs orthogonal vectors
     v1 = np.array([1.0, 0.0, 0.0])
     v2 = np.array([1.0, 0.0, 0.0])
     v3 = np.array([0.0, 1.0, 0.0])
@@ -147,11 +158,12 @@ def test_similarity_identity_and_difference():
     assert pytest.approx(cosine(v1, v2), rel=1e-6) == 1.0
     assert cosine(v1, v3) == pytest.approx(0.0, abs=1e-6)
     
-#Unit test for the upsert‐list helper
+# Unit Test: _upsert_list Helper
 class DummyObj:
     pass
 
 def test_upsert_list_creates_and_assigns(app):
+    # Ensure Genres table starts empty
     with app.app_context():
         Genre.query.delete()
         db.session.commit()
@@ -159,6 +171,7 @@ def test_upsert_list_creates_and_assigns(app):
     class Dummy: pass
 
     with app.test_request_context('/', method='POST', data={}):
+        # No input -> empty list
         dummy = Dummy()
         _upsert_list('genres', Genre, 'genres', dummy)
         assert getattr(dummy, 'genres', []) == []
@@ -166,6 +179,7 @@ def test_upsert_list_creates_and_assigns(app):
     with app.test_request_context(
         '/', method='POST', data={'genres':'A, B, C'}
     ):
+        # Comma-separated input creates new Genre objects
         dummy2 = Dummy()
         _upsert_list('genres', Genre, 'genres', dummy2)
 
@@ -173,8 +187,9 @@ def test_upsert_list_creates_and_assigns(app):
         assert names == ['A','B','C']
         assert Genre.query.filter_by(genre_name='B').one()
 
-#Integration tests for admin endpoints
+# Integration Tests: Admin Endpoints
 def login(client, email, password):
+    # Helper to login user via auth endpoint
     return client.post(
         url_for("auth.login"),
         data={"email": email, "password": password},
@@ -183,6 +198,7 @@ def login(client, email, password):
 
 @pytest.fixture
 def admin_user(app):
+    # Create an admin user in DB
     u = User(email="ad@test.com", is_admin=True)
     u.set_password("pw")
     db.session.add(u)
@@ -190,6 +206,7 @@ def admin_user(app):
     return u
 
 def test_admin_users_requires_admin(client, app):
+    # Non-admin should get 403 for admin pages
     with app.app_context():
         u = User(email="u@test.com")
         u.set_password("pw")
@@ -200,14 +217,16 @@ def test_admin_users_requires_admin(client, app):
     assert rv.status_code == 403
 
 def test_toggle_user_flip_state(client, admin_user):
+    # Admin can toggle user active state
     login(client, admin_user.email, "pw")
     rv = client.post(url_for("admin.toggle_user", uid=admin_user.user_id), follow_redirects=True)
     from files.models import User as U
     assert not U.query.get(admin_user.user_id).active
 
-#Integration tests around favorite AJAX vs form‐post
+# Integration Tests: Favorites AJAX vs Form
 @pytest.fixture
 def movie_and_user(app):
+    # Create a movie and a user for favorite tests
     y = Year(year_value=2023)
     d = Director(director_name="X")
     m = Movie(

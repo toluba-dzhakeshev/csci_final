@@ -1,13 +1,18 @@
+/* Star Rating Widget */
 .star-rating {
+   /* Display stars in reverse order for proper hover/focus behavior */
     display: inline-flex;
     flex-direction: row-reverse;
     font-size: 1.5rem;
     line-height: 1;
   }
+  /* Hide default radio inputs for custom star display */
   .star-rating input { display: none; }
+  /* Style labels to look like empty stars */
   .star-rating label { 
     cursor: pointer; padding: 0 .1rem; color: #ddd; 
   }
+  /* Replace empty stars with filled stars on hover or when checked */
   .star-rating label::before { content: '☆'; }
   .star-rating input:checked ~ label::before,
   .star-rating label:hover::before,
@@ -15,6 +20,7 @@
     content: '★'; color: gold;
   }
 
+/* noUiSlider - Horizontal Slider Base Styles */
 .noUi-target.noUi-horizontal {
   margin: 2rem 0 !important;
   position: relative;
@@ -27,15 +33,15 @@
   background: var(--tw-bg-gray-600) !important;
   overflow: visible !important;
 }
-
+/* Connected portion of slider (selected range) */
 .noUi-target.noUi-horizontal .noUi-connect {
   background: var(--tw-bg-blue-500) !important;
 }
-
+/* Hide tick marks */
 .noUi-target.noUi-horizontal .noUi-pips {
   display: none !important;
 }
-
+/* Slider handle styling */
 .noUi-target.noUi-horizontal .noUi-handle {
   width: 16px !important;
   height: 16px !important;
@@ -64,7 +70,7 @@ html.dark .noUi-target.noUi-horizontal .noUi-handle {
 .noUi-target.noUi-horizontal .noUi-handle::after {
   display: none !important;
 }
-
+/* Tooltip styling for slider values */
 .noUi-tooltip {
   position: absolute !important;
   top: 0 !important;
@@ -83,7 +89,7 @@ html.dark .noUi-target.noUi-horizontal .noUi-handle {
   pointer-events: none !important;
   z-index: 9 !important;
 }
-
+/* Adjust slider tooltip color in dark mode */
 html.dark .noUi-tooltip {
   color: var(--tw-text-gray-200) !important;
 }
@@ -103,13 +109,13 @@ label.slider‐title {
 .noUi-target.noUi-horizontal {
   margin: 0.5rem 0 3rem !important;
 }
-
+/* General form button spacing */
 button[type="submit"],
 input[type="submit"] {
   display: block;
   margin-top: 2rem !important;
 }
-
+/* Select2 Dark Mode Overrides */
 .dark .select2-container--default .select2-selection--single {
   background-color: #2d3748;
   border-color:     #4a5568;
@@ -171,7 +177,7 @@ input[type="submit"] {
   background-color: #4a5568;
   color:            #edf2f7;
 }
-
+/* Multiple selection tag styling */
 .select2-container--default .select2-selection--multiple {
   background-color: white;
   border-color: #d1d5db;

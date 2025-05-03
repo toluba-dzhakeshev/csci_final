@@ -9,6 +9,7 @@ from sqlalchemy import JSON
 
 db = SQLAlchemy()
 
+# Association tables for many-to-many relationships
 movie_genres = db.Table(
     'movie_genres', db.Model.metadata,
     db.Column('movie_id',  db.Integer, db.ForeignKey('movies.movie_id'),  primary_key=True),
@@ -34,6 +35,13 @@ movie_cast = db.Table(
 )
 
 class User(UserMixin, db.Model):
+    """
+    Represents an app user.
+    - email/password for auth
+    - is_admin flag
+    - active flag for disabling accounts
+    - favorites & ratings relationships
+    """
     __tablename__ = 'users'
     user_id    = db.Column(db.Integer, primary_key=True)
     email      = db.Column(db.String(120), unique=True, nullable=False)
@@ -48,6 +56,7 @@ class User(UserMixin, db.Model):
         server_default=text('TRUE')
     )
 
+    # Relationships
     favorites = db.relationship('Movie', secondary='favorites', back_populates='favorited_by')
     ratings   = db.relationship('Rating', back_populates='user')
     
@@ -56,15 +65,24 @@ class User(UserMixin, db.Model):
     
     @property
     def is_active(self):
+        # Override to use our 'active' column
         return self.active
     
     def set_password(self, pw):
+        # Hash and store the password
         self.password = generate_password_hash(pw)
 
     def check_password(self, pw):
+        # Verify a plaintext password
         return check_password_hash(self.password, pw)
 
 class Movie(db.Model):
+    """
+    Represents a movie entry.
+    - Stores metadata and an embedding vector as JSON text
+    - Links to Year and Director (one-to-many)
+    - Many-to-many with Genre, Studio, Producer, CastMember
+    """
     __tablename__ = 'movies'
     movie_id     = db.Column(db.Integer, primary_key=True)
     title        = db.Column(db.Text, nullable=False)
@@ -77,6 +95,7 @@ class Movie(db.Model):
     director_id  = db.Column(db.Integer, db.ForeignKey('directors.director_id'))
     embeddings   = db.Column(db.Text)
     
+    # Relationships
     year           = relationship('Year', back_populates='movies')
     genres         = relationship('Genre', secondary=movie_genres, back_populates='movies')
     studios        = relationship('Studio', secondary=movie_studios, back_populates='movies')
@@ -88,12 +107,14 @@ class Movie(db.Model):
     ratings      = db.relationship('Rating', back_populates='movie')
 
 class Favorite(db.Model):
+    # Junction table for User–Movie favorites.
     __tablename__ = 'favorites'
     user_id   = db.Column(db.Integer, db.ForeignKey('users.user_id'), primary_key=True)
     movie_id  = db.Column(db.Integer, db.ForeignKey('movies.movie_id'), primary_key=True)
     added_at  = db.Column(db.DateTime, server_default=func.now())
 
 class Rating(db.Model):
+    # Junction table for User–Movie model ratings.
     __tablename__ = 'ratings'
     user_id  = db.Column(db.Integer, db.ForeignKey('users.user_id'), primary_key=True)
     movie_id = db.Column(db.Integer, db.ForeignKey('movies.movie_id'), primary_key=True)
@@ -104,42 +125,49 @@ class Rating(db.Model):
     movie   = db.relationship('Movie', back_populates='ratings')
 
 class Year(db.Model):
+    # Year lookup table.
     __tablename__  = 'years'
     year_id        = db.Column(db.Integer, primary_key=True)
     year_value     = db.Column(db.Integer, nullable=False)
     movies         = relationship('Movie', back_populates='year')
 
 class Genre(db.Model):
+    # Genre lookup table.
     __tablename__  = 'genres'
     genre_id       = db.Column(db.Integer, primary_key=True)
     genre_name     = db.Column(db.String, unique=True, nullable=False)
     movies         = relationship('Movie', secondary='movie_genres', back_populates='genres')
     
 class Studio(db.Model):
+    # Studio lookup table.
     __tablename__ = 'studios'
     studio_id   = db.Column(db.Integer, primary_key=True)
     studio_name = db.Column(db.String, unique=True, nullable=False)
     movies      = relationship('Movie', secondary='movie_studios', back_populates='studios')
 
 class Director(db.Model):
+    # Director lookup table.
     __tablename__     = 'directors'
     director_id       = db.Column(db.Integer, primary_key=True)
     director_name     = db.Column(db.String, unique=True, nullable=False)
     movies            = relationship('Movie', back_populates='director')
 
 class Producer(db.Model):
+    # Producer lookup table.
     __tablename__    = 'producers'
     producer_id     = db.Column(db.Integer, primary_key=True)
     producer_name   = db.Column(db.String, unique=True, nullable=False)
     movies          = relationship('Movie', secondary='movie_producers', back_populates='producers')
 
 class CastMember(db.Model):
+    # Cast member lookup table.
     __tablename__    = 'cast_members'
     cast_id         = db.Column(db.Integer, primary_key=True)
     cast_name       = db.Column(db.String, unique=True, nullable=False)
     movies          = relationship('Movie', secondary='movie_cast', back_populates='cast_members')
     
 class ActivityLog(db.Model):
+    # Records user actions for analytics and auditing.
     __tablename__ = 'activity_log'
 
     id         = db.Column(db.Integer, primary_key=True)
