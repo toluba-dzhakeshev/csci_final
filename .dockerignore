@@ -1,0 +1,6 @@
+# Ignore Jupyter notebooks and data files
+*.ipynb
+notebooks/
+datasets/
+*.csv
+*.zip
