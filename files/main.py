@@ -7,6 +7,9 @@ from sqlalchemy import func
 from files.app import model, cache
 import json
 import re
+#TESTING RECOMMENDATION USING FAISS
+import faiss 
+from flask import current_app
 
 # Blueprint for main user-facing routes
 main_bp = Blueprint('main', __name__, template_folder='templates')
@@ -218,6 +221,9 @@ def recommend():
     if rf:       q = q.filter(Movie.avg_rating         >= float(rf))
     if rt:       q = q.filter(Movie.avg_rating         <= float(rt))
     candidates = q.all()
+    # ——— FAISS SETUP ———
+    has_filters = any([genre, studio, director, producer, cast, yf, yt, rf, rt])
+    # ———  END FAISS SETUP  ———
 
     # Case: no description - simple paginate by title
     if not desc:
@@ -257,30 +263,130 @@ def recommend():
         )
 
     # Case: with description - compute embeddings + cosine similarity
-    emb_q = model.encode(desc)
-    if getattr(emb_q, "ndim", None) == 2:
-        emb_q = emb_q.squeeze(0)
+    # emb_q = model.encode(desc)
+    # if getattr(emb_q, "ndim", None) == 2:
+    #     emb_q = emb_q.squeeze(0)
 
-    results = []
-    for m in candidates:
-        if not Favorite.query.get((uid, m.movie_id)):
-            try:
-                vals = json.loads(m.embeddings)
-            except json.JSONDecodeError:
-                txt = m.embeddings.strip('[]').strip()
-                vals = [float(x) for x in txt.split() if x]
-            arr = np.array(vals, dtype=float)
+    # results = []
+    # for m in candidates:
+    #     if not Favorite.query.get((uid, m.movie_id)):
+    #         try:
+    #             vals = json.loads(m.embeddings)
+    #         except json.JSONDecodeError:
+    #             txt = m.embeddings.strip('[]').strip()
+    #             vals = [float(x) for x in txt.split() if x]
+    #         arr = np.array(vals, dtype=float)
 
-            sim = arr.dot(emb_q) / (np.linalg.norm(arr) * np.linalg.norm(emb_q))
-            results.append((sim, m))
+    #         sim = arr.dot(emb_q) / (np.linalg.norm(arr) * np.linalg.norm(emb_q))
+    #         results.append((sim, m))
 
-    # Sort by similarity and paginate
-    results.sort(key=lambda x: x[0], reverse=True)
-    page     = results[offset:offset+limit]
-    has_more = len(results) > offset + limit
+    # # Sort by similarity and paginate
+    # results.sort(key=lambda x: x[0], reverse=True)
+    # page     = results[offset:offset+limit]
+    # has_more = len(results) > offset + limit
 
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        payload = [{
+    # if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+    #     payload = [{
+    #         'sim':         round(sim,2),
+    #         'movie_id':    m.movie_id,
+    #         'title':       m.title,
+    #         'poster_url':  m.poster_url,
+    #         'description': m.description,
+    #         'year':        m.year.year_value,
+    #         'genres':      [g.genre_name for g in m.genres],
+    #         'studios':     [s.studio_name for s in m.studios],
+    #         'director':    m.director.director_name,
+    #         'producers':   [p.producer_name for p in m.producers],
+    #         'cast':        [c.cast_name for c in m.cast_members],
+    #         'duration':    m.duration,
+    #         'page_url':    m.page_url,
+    #         'faved':       Favorite.query.get((uid, m.movie_id)) is not None,
+    #         'avg_rating':  m.avg_rating,
+    #     } for sim,m in page]
+    #     return jsonify({
+    #         'movies':      payload,
+    #         'next_offset': offset + limit,
+    #         'has_more':    has_more
+    #     })
+
+    # return render_template(
+    #     'results.html',
+    #     recommendations=page,
+    #     next_offset=offset + limit,
+    #     has_more=has_more
+    # )
+    
+    # ——— FAISS SETUP ———
+    if desc and not has_filters:
+        # embed & normalize
+        emb = model.encode(desc).astype('float32').reshape(1, -1)
+        faiss.normalize_L2(emb)
+
+        # search full IVF index for top (offset+limit)
+        D, I = current_app.faiss_index.search(emb, offset + limit)
+        hits = [current_app.idx_to_id[i] for i in I[0] if i != -1]
+        page_ids = hits[offset:offset+limit]
+        has_more = len(hits) > offset+limit
+
+        # load & order movies
+        movies = Movie.query.filter(Movie.movie_id.in_(page_ids)).all()
+        movies.sort(key=lambda m: page_ids.index(m.movie_id))
+
+        payload = []
+        for rank, m in enumerate(movies):
+            payload.append({
+                'sim':         float(D[0][offset+rank]),
+                'movie_id':    m.movie_id,
+                'title':       m.title,
+                'poster_url':  m.poster_url,
+                'description': m.description,
+                'year':        m.year.year_value,
+                'genres':      [g.genre_name for g in m.genres],
+                'studios':     [s.studio_name for s in m.studios],
+                'director':    m.director.director_name,
+                'producers':   [p.producer_name for p in m.producers],
+                'cast':        [c.cast_name for c in m.cast_members],
+                'duration':    m.duration,
+                'page_url':    m.page_url,
+                'faved':       Favorite.query.get((current_user.user_id, m.movie_id)) is not None,
+                'avg_rating':  m.avg_rating
+            })
+
+        if request.headers.get('X-Requested-With'):
+            return jsonify(movies=payload, next_offset=offset+limit, has_more=has_more)
+        return render_template('results.html',
+                               recommendations=list(zip([p['sim'] for p in payload], movies)),
+                               next_offset=offset+limit,
+                               has_more=has_more)
+
+    # --- CASE 3: description + filters → FAISS + SQL restriction ---
+    # embed & normalize
+    emb = model.encode(desc).astype('float32').reshape(1, -1)
+    faiss.normalize_L2(emb)
+
+    # search all
+    D, I = current_app.faiss_index.search(emb, current_app.faiss_index.ntotal)
+    candidate_ids = {m.movie_id for m in candidates}
+
+    # filter FAISS results down to our SQL candidates
+    ranked = []
+    for pos, idx in enumerate(I[0]):
+        mid = current_app.idx_to_id[idx]
+        if mid in candidate_ids:
+            ranked.append((float(D[0][pos]), mid))
+
+    # paginate
+    page_ranked = ranked[offset:offset+limit]
+    has_more    = len(ranked) > offset+limit
+    mids        = [mid for _, mid in page_ranked]
+
+    movies = Movie.query.filter(Movie.movie_id.in_(mids)).all()
+    movies.sort(key=lambda m: mids.index(m.movie_id))
+
+    payload = []
+    for sim, mid in page_ranked:
+        m = next(m for m in movies if m.movie_id == mid)
+        payload.append({
             'sim':         round(sim,2),
             'movie_id':    m.movie_id,
             'title':       m.title,
@@ -294,21 +400,17 @@ def recommend():
             'cast':        [c.cast_name for c in m.cast_members],
             'duration':    m.duration,
             'page_url':    m.page_url,
-            'faved':       Favorite.query.get((uid, m.movie_id)) is not None,
-            'avg_rating':  m.avg_rating,
-        } for sim,m in page]
-        return jsonify({
-            'movies':      payload,
-            'next_offset': offset + limit,
-            'has_more':    has_more
+            'faved':       Favorite.query.get((current_user.user_id, m.movie_id)) is not None,
+            'avg_rating':  m.avg_rating
         })
 
-    return render_template(
-        'results.html',
-        recommendations=page,
-        next_offset=offset + limit,
-        has_more=has_more
-    )
+    if request.headers.get('X-Requested-With'):
+        return jsonify(movies=payload, next_offset=offset+limit, has_more=has_more)
+    return render_template('results.html',
+                           recommendations=[(p['sim'], Movie.query.get(p['movie_id'])) for p in payload],
+                           next_offset=offset+limit,
+                           has_more=has_more)
+    # ———  END FAISS SETUP  ———
 
 @main_bp.route('/results')
 @login_required

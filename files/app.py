@@ -8,6 +8,12 @@ from flask_caching import Cache
 from files.admin import admin_bp
 import os
 from dotenv import load_dotenv
+#TESTING RECOMMENDATION USING FAISS
+import numpy as np
+import faiss
+faiss.omp_set_num_threads(1) 
+from files.models import Movie
+import json
 
 # Protect against CSRF attacks on form submissions
 csrf = CSRFProtect()
@@ -72,6 +78,35 @@ def create_app(test_config: dict | None = None):
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(admin_bp, url_prefix='/admin')
+    
+    # ——— START FAISS SETUP ———
+    with app.app_context():
+        films = Movie.query.order_by(Movie.movie_id).all()
+        embs_list = []
+        for m in films:
+            raw = m.embeddings
+            try:
+                vals = json.loads(raw)
+            except json.JSONDecodeError:
+                txt = raw.strip('[]').strip()
+                vals = [float(x) for x in txt.split() if x]
+            embs_list.append(vals)
+
+        embs = np.array(embs_list, dtype='float32')
+        faiss.normalize_L2(embs)
+        # build an IVF index with 100 coarse clusters
+        dim    = embs.shape[1]
+        nlist  = 100
+        quant = faiss.IndexFlatL2(dim)
+        ivf   = faiss.IndexIVFFlat(quant, dim, nlist, faiss.METRIC_INNER_PRODUCT)
+        ivf.train(embs)
+        ivf.add(embs)
+
+        app.faiss_index = ivf
+        app.idx_to_id   = [m.movie_id for m in films]
+        # build reverse lookup so we can go from movie_id → row in IVF
+        app.id_to_idx   = {mid: i for i, mid in enumerate(app.idx_to_id)}
+    # ———  END FAISS SETUP  ———
 
     return app
 

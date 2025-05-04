@@ -51,24 +51,31 @@ def list_movies():
     # Paginated list of movies for the admin to browse/edit/delete.
     page     = request.args.get('page', 1, type=int)
     per_page = 10
+    
+    # grab optional search term
+    search   = request.args.get('search', '').strip()
+    
+    # build base query
+    q = Movie.query
+    if search:
+        q = q.filter(Movie.title.ilike(f'%{search}%'))
 
-    total    = Movie.query.count()
+    total = q.count()
 
-    movies = (
-      Movie.query
-           .order_by(Movie.title)
-           .offset((page - 1) * per_page)
-           .limit(per_page)
-           .all()
-    )
-
-    more = page * per_page < total
+    movies  = (q
+               .order_by(Movie.title)
+               .offset((page - 1) * per_page)
+               .limit(per_page)
+               .all())
+    
+    more    = page * per_page < total
 
     return render_template(
       'movies.html',
       movies=movies,
       page=page,
-      more=more
+      more=more,
+      search=search
     )
 
 def _upsert_list(field_name, cls, rel, parent_obj):
@@ -178,7 +185,7 @@ def add_movie():
         # Commit and redirect
         db.session.add(m)
         db.session.commit()
-        flash('Movie added', 'success')
+        flash(f'"{m.title}" was added successfully.', 'success')
         return redirect(url_for('admin.list_movies'))
 
     # GET → render empty form
@@ -246,7 +253,7 @@ def edit_movie(mid):
         _upsert_list('cast_members', CastMember, 'cast_members', m)
 
         db.session.commit()
-        flash('Movie updated', 'success')
+        flash(f'"{m.title}" was edited successfully.', 'success')
         return redirect(url_for('admin.list_movies'))
 
     # GET → render form with existing data

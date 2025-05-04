@@ -10,6 +10,44 @@
   </a>
   {# Responsive table wrapper with dark mode support #}
   <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow">
+    {# Search bar for admin by Title #}
+    <form action="{{ url_for('admin.list_movies') }}" method="get" class="mb-4 w-full flex flex-col space-y-2">
+      <!-- full-width text input -->
+      <input
+        type="text"
+        name="search"
+        value="{{ search }}"
+        placeholder="Search movies by title…"
+        class="
+          w-full h-12
+          px-4
+          text-base
+          bg-white dark:bg-gray-800
+          text-gray-900 dark:text-gray-100
+          placeholder-gray-500 dark:placeholder-gray-400
+          border border-gray-300 dark:border-gray-600
+          rounded-lg
+          focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400
+        "
+      />
+    
+      <!-- full-width button underneath -->
+      <button
+        type="submit"
+        class="
+          w-full h-12
+          px-6 text-base font-medium
+          bg-blue-600 hover:bg-blue-700
+          text-white dark:text-gray-100
+          rounded-lg
+        "
+      >
+        Search
+      </button>
+    </form>
+    
+        
+
     <table class="min-w-full table-fixed divide-y divide-gray-200 dark:divide-gray-700">
       <thead class="bg-gray-50 dark:bg-gray-700">
         <tr>
@@ -70,7 +108,7 @@
   {# Pagination: "More" button if more pages exist #}
   {% if more %}
   <div class="mt-4 text-center">
-    <a href="{{ url_for('admin.list_movies', page=page+1) }}"
+    <a href="{{ url_for('admin.list_movies', page=page+1, search=search) }}"
        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
       More
     </a>
